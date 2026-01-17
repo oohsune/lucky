@@ -3,409 +3,533 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>高级抽奖系统-尊享版</title>
+    <title>尊享旗舰级抽奖系统 - Ultimate</title>
     <style>
-        /* --- 全局基础样式 --- */
+        /* ================== CSS 变量 (核心联动引擎) ================== */
         :root {
-            --bg-source: url('背景.jpg');
-            --main-title-font: "Microsoft YaHei";
-            --main-title-size: 60px;
-            --main-title-color: #ffffff;
-            --main-title-weight: bold;
-            --box-bg: rgba(255, 255, 255, 0.1);
-            --box-border-w: 2px;
-            --box-w: 800px;
-            --box-h: 300px;
-            --btn-bg: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
-            --btn-border-w: 1px;
-            --btn-w: 240px;
-            --btn-h: 60px;
-            --roll-style: normal;
-            --win-style: italic;
-            --list-show: block;
+            /* 字体与排版 */
+            --font-main: "Microsoft YaHei", sans-serif;
+            --title-size: 70px;
+            --title-color: #ffffff;
+            --title-weight: bold;
+            --sub-size: 26px;
+            --sub-color: rgba(255,255,255,0.9);
+
+            /* 背景 */
+            --bg-image: url('背景.jpg'); 
+
+            /* 抽奖容器 */
+            --box-width: 900px;
+            --box-height: 350px;
+            --box-bg: rgba(255, 255, 255, 0.1); /* 默认透明度 */
+            --box-border-size: 2px;
+            --box-border-color: rgba(255, 255, 255, 0.4);
+
+            /* 按钮 */
+            --btn-w: 260px;
+            --btn-h: 75px;
+            --btn-bg: linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.05));
+            --btn-border: 1px;
+            
+            /* 历史记录 */
+            --history-show: block;
+            --history-style: italic;
         }
 
-        * { box-sizing: border-box; transition: all 0.2s ease-out; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: "PingFang SC", "Microsoft YaHei", sans-serif; }
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: var(--font-main); }
 
-        /* --- 前台界面 --- */
+        /* ================== 前台视觉 ================== */
         #frontend {
-            position: relative; width: 100%; height: 100%;
-            background: var(--bg-source) no-repeat center center;
-            background-size: cover; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 1;
+            width: 100%; height: 100%;
+            background: var(--bg-image) no-repeat center center;
+            background-size: cover;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative; z-index: 1;
         }
 
-        #title-container { text-align: center; margin-bottom: 30px; }
+        /* 标题区域 */
+        .header { text-align: center; margin-bottom: 40px; text-shadow: 0 4px 20px rgba(0,0,0,0.6); }
         #main-title { 
-            font-size: var(--main-title-size); color: var(--main-title-color); 
-            font-weight: var(--main-title-weight); font-family: var(--main-title-font);
-            margin: 0; text-shadow: 0 0 20px rgba(0,0,0,0.5);
+            font-size: var(--title-size); color: var(--title-color); 
+            font-weight: var(--title-weight); margin: 0; letter-spacing: 3px;
         }
-        #sub-title { color: rgba(255,255,255,0.8); margin-top: 10px; font-size: 20px; }
+        #sub-title { font-size: var(--sub-size); color: var(--sub-color); margin-top: 10px; }
 
-        /* 抽奖盒 */
+        /* 抽奖主容器 (毛玻璃) */
         #lottery-box {
-            width: var(--box-w); height: var(--box-h);
-            border: var(--box-border-w) solid rgba(255,255,255,0.3);
-            background: var(--box-bg); border-radius: 20px;
-            backdrop-filter: blur(15px); display: flex; align-items: center;
-            justify-content: center; overflow: hidden; margin-bottom: 40px;
-        }
-        .slot-container { display: flex; justify-content: space-around; width: 100%; padding: 0 20px; }
-        .name-slot { 
-            flex: 1; text-align: center; color: white; font-size: 3.5rem; 
-            font-weight: bold; text-shadow: 0 0 10px rgba(0,0,0,0.3); 
+            width: var(--box-width); height: var(--box-height);
+            border: var(--box-border-size) solid var(--box-border-color);
+            background: var(--box-bg);
+            border-radius: 20px;
+            backdrop-filter: blur(15px); /* 毛玻璃核心 */
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 50px; overflow: hidden;
         }
 
-        /* 抽奖文字状态 */
-        .rolling-text { font-style: var(--roll-style); opacity: 0.8; filter: blur(1px); }
-        .winner-text { 
-            font-style: var(--win-style); color: #fff;
-            text-shadow: 0 0 20px #fff, 0 0 30px #ff00de; 
-            animation: winPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        .slots-wrapper { display: flex; justify-content: space-around; width: 100%; padding: 0 20px; }
+        .slot-item {
+            flex: 1; text-align: center; color: white; font-size: 2.8rem; font-weight: bold;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        @keyframes winPop {
-            0% { transform: scale(0.5); opacity: 0; }
-            100% { transform: scale(1.2); opacity: 1; }
+        /* 动画状态 */
+        .mode-rolling {
+            filter: blur(5px); opacity: 0.8; transform: scale(0.9);
+            animation: text-shake 0.1s infinite;
         }
+        .mode-winner {
+            color: #fff; font-style: normal;
+            text-shadow: 0 0 10px #fff, 0 0 30px #ff00de, 0 0 30px #feca57; /* 发光特效 */
+            animation: zoom-pop 0.6s cubic-bezier(0.17, 0.89, 0.32, 1.4) forwards;
+        }
+
+        @keyframes text-shake { 0% { transform: translateY(2px); } 100% { transform: translateY(-2px); } }
+        @keyframes zoom-pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
         /* 抽奖按钮 */
         #draw-btn {
             width: var(--btn-w); height: var(--btn-h);
-            border: var(--btn-border-w) solid rgba(255,255,255,0.4);
-            background: var(--btn-bg); color: white; border-radius: 50px;
-            cursor: pointer; font-size: 1.5rem; display: flex; align-items: center;
-            justify-content: center; gap: 12px; backdrop-filter: blur(5px);
+            background: var(--btn-bg);
+            border: var(--btn-border) solid rgba(255,255,255,0.6);
+            border-radius: 60px; color: white; cursor: pointer;
+            font-size: 1.8rem; display: flex; align-items: center; justify-content: center; gap: 12px;
+            backdrop-filter: blur(8px); user-select: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        #draw-btn:hover { border-color: white; transform: scale(1.05); background: rgba(255,255,255,0.3); }
+        #draw-btn:hover { transform: scale(1.05); background: rgba(255,255,255,0.35); }
+        #draw-btn:active { transform: scale(0.95); }
 
-        /* 中奖名单列表 */
-        #round-history {
-            margin-top: 30px; width: 80%; max-height: 150px; overflow-y: auto;
-            display: var(--list-show); color: white; text-align: center;
-            scrollbar-width: none;
+        /* 历史记录 */
+        #history-area {
+            margin-top: 30px; width: 80%; max-height: 200px; overflow-y: auto;
+            display: var(--history-show); 
+            text-align: center; scrollbar-width: none;
         }
-        .history-item { 
-            background: rgba(0,0,0,0.2); margin-bottom: 5px; padding: 8px; 
-            border-radius: 5px; font-size: 14px; animation: fadeIn 0.5s;
+        .history-item {
+            background: rgba(0,0,0,0.25); padding: 12px; margin-bottom: 8px; border-radius: 10px;
+            font-size: 16px; color: white; border: 1px solid rgba(255,255,255,0.08);
+            animation: slide-up 0.5s ease;
         }
+        @keyframes slide-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- 后台界面 --- */
-        #backend-icon {
-            position: fixed; bottom: 20px; left: 20px; font-size: 28px;
-            cursor: pointer; z-index: 1000; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));
+        /* ================== 后台管理面板 ================== */
+        #backend-toggle {
+            position: fixed; bottom: 20px; left: 20px; width: 50px; height: 50px;
+            background: rgba(255,255,255,0.15); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; cursor: pointer; z-index: 1000;
+            backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.3);
+            transition: 0.3s;
         }
+        #backend-toggle:hover { background: white; color: black; transform: rotate(90deg); }
+
         #backend-panel {
-            position: fixed; bottom: 70px; left: 20px; width: 450px; max-height: 80vh;
-            background: rgba(255,255,255,0.98); border-radius: 15px; padding: 25px;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.5); z-index: 999;
-            display: none; flex-direction: column; overflow-y: auto; color: #333;
+            position: fixed; bottom: 80px; left: 20px; width: 480px; max-height: 85vh;
+            background: rgba(255, 255, 255, 0.98); border-radius: 16px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.5); z-index: 999;
+            display: none; flex-direction: column; padding: 25px;
+            overflow-y: auto; font-size: 13px; color: #333;
         }
-        .setting-group { margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        .setting-group h3 { margin: 0 0 12px 0; font-size: 16px; color: #007bff; border-left: 4px solid #007bff; padding-left: 10px; }
-        label { display: block; font-size: 12px; margin-bottom: 5px; font-weight: bold; color: #666; }
-        input, select, textarea { width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 6px; }
-        .hint { font-size: 11px; color: #999; margin-top: -10px; margin-bottom: 10px; display: block; }
-        .flex-row { display: flex; gap: 10px; }
-        .action-btn { flex: 1; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-green { background: #28a745; color: white; }
-        .btn-red { background: #dc3545; color: white; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .section { border-bottom: 1px dashed #ddd; padding-bottom: 20px; margin-bottom: 20px; }
+        .section-header { 
+            font-weight: bold; color: #2980b9; margin-bottom: 15px; 
+            border-left: 5px solid #3498db; padding-left: 10px; 
+            display: flex; justify-content: space-between; align-items: center; user-select: none;
+        }
+        
+        .form-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .form-col { flex: 1; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 12px; color: #555; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; outline: none; }
+        input:focus { border-color: #3498db; }
+        .hint { font-size: 11px; color: #888; margin-top: -5px; margin-bottom: 8px; line-height: 1.4; }
+
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; margin-top: 5px; transition: 0.2s; }
+        .btn-save { background: #27ae60; } .btn-save:hover { background: #219150; }
+        .btn-reset { background: #c0392b; } .btn-reset:hover { background: #a93226; }
+        .btn-add { background: #3498db; color: white; width: auto; padding: 0 15px; }
+
+        /* 隐藏功能区 (Secret) */
+        #secret-zone {
+            display: none; background: #fff5f5; border: 2px dashed #e74c3c; 
+            padding: 15px; border-radius: 10px; margin-top: 10px;
+        }
+        .cheat-item { 
+            background: white; padding: 5px 10px; border-radius: 4px; margin-bottom: 5px; 
+            border: 1px solid #fadbd8; display: flex; justify-content: space-between; color: #c0392b;
+        }
+        .cheat-del { cursor: pointer; font-weight: bold; }
+
     </style>
 </head>
 <body>
 
 <div id="frontend">
-    <div id="title-container">
-        <h1 id="main-title">年度盛典大抽奖</h1>
-        <div id="sub-title">让好运在这一刻发生</div>
+    <div class="header">
+        <h1 id="main-title">公司年会盛典</h1>
+        <div id="sub-title">LUCKY DRAW 2025</div>
     </div>
 
     <div id="lottery-box">
-        <div class="slot-container" id="slot-container">
-            </div>
+        <div class="slots-wrapper" id="slots-area">
+            <div class="slot-item">等待开奖</div>
+        </div>
     </div>
 
-    <button id="draw-btn" onclick="toggleDraw()">
-        <span id="cfg-btn-icon-disp">🎁</span>
-        <span id="draw-btn-text">开始抽奖</span>
+    <button id="draw-btn" onclick="handleDraw()">
+        <span id="btn-icon">🎁</span>
+        <span id="btn-text">开始抽奖</span>
     </button>
 
-    <div id="round-history">
-        </div>
+    <div id="history-area"></div>
 </div>
 
-<div id="backend-icon" onclick="togglePanel()">⚙️</div>
+<div id="backend-toggle" onclick="toggleBackend()">⚙️</div>
 
 <div id="backend-panel">
-    <div class="setting-group">
-        <h3>1. 标题与背景定制</h3>
-        <label>主/副标题文字</label>
-        <input type="text" id="in-m-title" value="年度盛典大抽奖" oninput="liveUpdate()">
-        <input type="text" id="in-s-title" value="让好运在这一刻发生" oninput="liveUpdate()">
-        <label>标题样式 (大小/颜色/字体)</label>
-        <div class="flex-row">
-            <input type="number" id="in-m-size" value="60" oninput="liveUpdate()">
-            <input type="color" id="in-m-color" value="#ffffff" oninput="liveUpdate()">
-            <select id="in-m-font" onchange="liveUpdate()">
-                <option value="Microsoft YaHei">微软雅黑</option>
-                <option value="SimHei">黑体</option>
-                <option value="KaiTi">楷体</option>
+    
+    <div class="section">
+        <div class="section-header">1. 标题与背景视觉</div>
+        <div class="form-row">
+            <div class="form-col"><label>主标题内容</label><input type="text" id="cfg-m-title" value="公司年会盛典" oninput="syncUI()"></div>
+            <div class="form-col"><label>副标题内容</label><input type="text" id="cfg-s-title" value="LUCKY DRAW 2025" oninput="syncUI()"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-col"><label>字体选择</label>
+                <select id="cfg-font" onchange="syncUI()">
+                    <option value="Microsoft YaHei">微软雅黑</option>
+                    <option value="SimHei">黑体</option>
+                    <option value="KaiTi">楷体</option>
+                    <option value="Arial">Arial</option>
+                </select>
+            </div>
+            <div class="form-col"><label>标题颜色</label><input type="color" id="cfg-color" value="#ffffff" oninput="syncUI()"></div>
+            <div class="form-col"><label>标题大小</label><input type="number" id="cfg-size" value="70" oninput="syncUI()"></div>
+        </div>
+        <label>全局背景 (图片URL 或 颜色渐变)</label>
+        <input type="text" id="cfg-bg" value="背景.jpg" oninput="syncUI()">
+        <div class="hint">输入: url('image.jpg') 或 linear-gradient(45deg, #123, #456)</div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">2. 音效控制</div>
+        <div class="form-row">
+            <div class="form-col"><label>滚动音乐 (音乐1.mp3)</label><input type="text" id="cfg-music1" value="音乐1.mp3"></div>
+            <div class="form-col"><label>音量(0-1)</label><input type="number" id="cfg-vol1" value="0.6" step="0.1" max="1"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-col"><label>获奖音乐 (音乐2.mp3)</label><input type="text" id="cfg-music2" value="音乐2.mp3"></div>
+            <div class="form-col"><label>音量(0-1)</label><input type="number" id="cfg-vol2" value="0.8" step="0.1" max="1"></div>
+        </div>
+        <div class="hint">获奖音乐播放3秒后，系统会自动执行渐隐消失效果。</div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">3. 区域与按钮定制</div>
+        <div class="form-row">
+            <div class="form-col"><label>抽奖区宽</label><input type="number" id="cfg-box-w" value="900" oninput="syncUI()"></div>
+            <div class="form-col"><label>抽奖区高</label><input type="number" id="cfg-box-h" value="350" oninput="syncUI()"></div>
+            <div class="form-col"><label>边框大小</label><input type="number" id="cfg-box-b" value="2" oninput="syncUI()"></div>
+        </div>
+        <div class="form-col">
+            <label>抽奖区背景风格</label>
+            <select id="cfg-box-bg" onchange="syncUI()">
+                <option value="rgba(255,255,255,0.1)">全透明磨砂 (Glass)</option>
+                <option value="rgba(0,0,0,0.5)">半透黑 (Dark)</option>
+                <option value="linear-gradient(to top, rgba(255,255,255,0.2), transparent)">渐变透明</option>
             </select>
+            <div class="hint">前台抽奖区、按钮、名单背景均已设为透明风格。</div>
         </div>
-        <label>网页背景 (默认: 背景.jpg)</label>
-        <input type="text" id="in-bg" value="url('背景.jpg')" oninput="liveUpdate()">
-        <span class="hint">输入 url('图片地址') 或渐变如 linear-gradient(45deg, #f00, #00f)</span>
+        <div class="form-row" style="margin-top:10px;">
+            <div class="form-col"><label>按钮宽度</label><input type="number" id="cfg-btn-w" value="260" oninput="syncUI()"></div>
+            <div class="form-col"><label>按钮图标</label>
+                <select id="cfg-btn-icon" onchange="syncUI()">
+                    <option value="🎁">🎁 礼物</option><option value="🔥">🔥 火焰</option><option value="⚡">⚡ 闪电</option>
+                </select>
+            </div>
+            <div class="form-col"><label>角标图标</label>
+                <select id="cfg-badge" onchange="syncUI()">
+                    <option value="⚙️">⚙️</option><option value="🔒">🔒</option><option value="🔧">🔧</option>
+                </select>
+            </div>
+        </div>
     </div>
 
-    <div class="setting-group">
-        <h3>2. 音乐配置</h3>
-        <label>抽奖音乐 (音乐1.mp3) / 音量</label>
-        <div class="flex-row">
-            <input type="text" id="in-mu1" value="音乐1.mp3">
-            <input type="range" id="in-vol1" min="0" max="1" step="0.1" value="0.6">
+    <div class="section">
+        <div class="section-header" id="trigger-area" onclick="handleSecretClick()" style="cursor: pointer;" title="连续点击2次打开隐藏功能">
+            4. 名单与系统设置
         </div>
-        <label>中奖音乐 (音乐2.mp3) / 音量</label>
-        <div class="flex-row">
-            <input type="text" id="in-mu2" value="音乐2.mp3">
-            <input type="range" id="in-vol2" min="0" max="1" step="0.1" value="0.8">
-        </div>
-        <span class="hint">中奖音乐3秒后自动淡出停止。</span>
-    </div>
+        
+        <label>同时中奖人数</label>
+        <input type="number" id="cfg-count" value="1" min="1" max="10" oninput="initSlots()">
 
-    <div class="setting-group">
-        <h3>3. 区域与按钮样式</h3>
-        <label>抽奖区 (宽/高/边框/背景)</label>
-        <div class="flex-row">
-            <input type="number" id="in-box-w" value="800" oninput="liveUpdate()">
-            <input type="number" id="in-box-h" value="300" oninput="liveUpdate()">
-            <input type="number" id="in-box-b" value="2" oninput="liveUpdate()">
-        </div>
-        <select id="in-box-bg" onchange="liveUpdate()">
-            <option value="rgba(255,255,255,0.1)">超透明磨砂</option>
-            <option value="rgba(0,0,0,0.5)">半透深沉黑</option>
-            <option value="linear-gradient(rgba(255,255,255,0.2), transparent)">上至下渐变</option>
+        <label>人员名单 (中文，逗号隔开，最多500人)</label>
+        <textarea id="cfg-names" rows="5">赵一,钱二,孙三,李四,周五,吴六,郑七,王八,冯九,陈十,卫十一,蒋十二,沈十三,韩十四,杨十五,刘十六,张十七,林十八,黄十九,朱二十</textarea>
+        
+        <label>显示中奖名单</label>
+        <select id="cfg-history-show" onchange="syncUI()">
+            <option value="block">显示列表</option>
+            <option value="none">不显示</option>
         </select>
-        <label>按钮 (图标/宽/高/渐变背景)</label>
-        <div class="flex-row">
-            <select id="in-btn-icon" onchange="liveUpdate()">
-                <option value="🎁">🎁 礼物</option><option value="🔥">🔥 火热</option><option value="⭐">⭐ 星星</option><option value="⚙️">⚙️ 齿轮</option>
-            </select>
-            <input type="number" id="in-btn-w" value="240" oninput="liveUpdate()">
-            <input type="number" id="in-btn-h" value="60" oninput="liveUpdate()">
-        </div>
-        <select id="in-btn-bg" onchange="liveUpdate()">
-            <option value="linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05))">默认透明</option>
-            <option value="linear-gradient(45deg, #ff416c, #ff4b2b)">热力渐变红</option>
-            <option value="linear-gradient(45deg, #2193b0, #6dd5ed)">清爽渐变蓝</option>
-        </select>
-        <label>中奖名单显示控制</label>
-        <select id="in-list-show" onchange="liveUpdate()">
-            <option value="block">显示名单</option>
-            <option value="none">隐藏名单</option>
-        </select>
-    </div>
 
-    <div class="setting-group">
-        <h3>4. 名单导入与逻辑</h3>
-        <label>同时抽奖人数</label>
-        <input type="number" id="in-draw-count" value="1" min="1" max="10" oninput="initSlots()">
-        <label>名单导入 (逗号隔开)</label>
-        <textarea id="in-names" rows="4">陈明,王强,李芳,张伟,赵敏,孙杰,周涛,吴磊,郑洁,冯平,褚卫,卫华,蒋云,沈霞,韩梅,杨立,朱勇,秦丽,尤文,许博</textarea>
-        <span class="hint">规则：支持中文，最高500人。已中奖的人员不会再次中奖。</span>
-        <div class="flex-row">
-            <button class="action-btn btn-green" onclick="saveNames()">保存名单并重置</button>
+        <div class="form-row" style="margin-top:10px;">
+            <button class="btn btn-save" onclick="saveData()">保存配置并重置</button>
+            <button class="btn btn-reset" onclick="resetSystem()">清空记录 (全员重抽)</button>
+        </div>
+
+        <div id="secret-zone">
+            <h4 style="margin-top:0; color:#c0392b;">😈 必中名单配置 (隐藏功能)</h4>
+            <div class="hint">配置特定轮次的必中人选。注意：人数不要超过单轮抽取数。</div>
+            <div class="form-row">
+                <input type="number" id="cheat-round" placeholder="第几轮 (如 1)" style="flex:1;">
+                <input type="text" id="cheat-who" placeholder="姓名 (如 张三,李四)" style="flex:2;">
+                <button class="btn btn-add" onclick="addCheatRule()">添加规则</button>
+            </div>
+            <div id="cheat-list-display"></div>
         </div>
     </div>
 
-    <div class="setting-group">
-        <h3>5. 记录管理</h3>
-        <label>中奖记录管理</label>
-        <div id="backend-record-list" style="font-size: 11px; background:#f4f4f4; padding:5px; max-height:80px; overflow-y:auto;">无记录</div>
-        <div class="flex-row" style="margin-top:10px;">
-            <button class="action-btn btn-red" onclick="resetLottery()">全系统重置</button>
-        </div>
+    <div style="text-align:center; color:#999; font-size:12px;">
+        当前状态：第 <span id="status-round">1</span> 轮 | 剩余 <span id="status-left">0</span> 人
     </div>
 </div>
 
-<audio id="audio-bg" loop></audio>
+<audio id="audio-roll" loop></audio>
 <audio id="audio-win"></audio>
 
 <script>
-    let pool = [];      // 总名单
-    let available = []; // 剩余可抽名单
-    let winners = [];   // 总中奖者名单
-    let currentRoundWinners = [];
+    // --- 全局状态 ---
+    let fullList = [];
+    let available = [];
+    let winners = [];
     let isRolling = false;
-    let timer = null;
+    let rollTimer = null;
     let currentRound = 1;
+    let clickCount = 0; // 用于检测双击
+    let cheatRules = {}; // 格式: { 1: ['张三'], 2: ['李四', '王五'] }
 
     // --- 初始化 ---
     window.onload = () => {
-        saveNames();
-        liveUpdate();
-        initSlots();
+        saveData();
+        syncUI();
     };
 
-    function togglePanel() {
+    // --- UI 控制 ---
+    function toggleBackend() {
         const p = document.getElementById('backend-panel');
         p.style.display = (p.style.display === 'flex') ? 'none' : 'flex';
     }
 
-    // --- 实时联动更新 ---
-    function liveUpdate() {
-        const r = document.documentElement;
-        // 标题
-        document.getElementById('main-title').innerText = document.getElementById('in-m-title').value;
-        document.getElementById('sub-title').innerText = document.getElementById('in-s-title').value;
-        r.style.setProperty('--main-title-size', document.getElementById('in-m-size').value + 'px');
-        r.style.setProperty('--main-title-color', document.getElementById('in-m-color').value);
-        r.style.setProperty('--main-title-font', document.getElementById('in-m-font').value);
-        r.style.setProperty('--bg-source', document.getElementById('in-bg').value);
+    function syncUI() {
+        const root = document.documentElement.style;
+        const val = (id) => document.getElementById(id).value;
 
-        // 抽奖盒
-        r.style.setProperty('--box-w', document.getElementById('in-box-w').value + 'px');
-        r.style.setProperty('--box-h', document.getElementById('in-box-h').value + 'px');
-        r.style.setProperty('--box-border-w', document.getElementById('in-box-b').value + 'px');
-        r.style.setProperty('--box-bg', document.getElementById('in-box-bg').value);
+        // 文本
+        document.getElementById('main-title').innerText = val('cfg-m-title');
+        document.getElementById('sub-title').innerText = val('cfg-s-title');
+        root.setProperty('--font-main', val('cfg-font'));
+        root.setProperty('--title-color', val('cfg-color'));
+        root.setProperty('--title-size', val('cfg-size') + 'px');
+
+        // 背景 (自动判断是图片还是渐变)
+        let bg = val('cfg-bg');
+        if(!bg.includes('url') && !bg.includes('gradient')) bg = `url('${bg}')`;
+        root.setProperty('--bg-image', bg);
+
+        // 盒子
+        root.setProperty('--box-width', val('cfg-box-w') + 'px');
+        root.setProperty('--box-height', val('cfg-box-h') + 'px');
+        root.setProperty('--box-border-size', val('cfg-box-b') + 'px');
+        root.setProperty('--box-bg', val('cfg-box-bg'));
 
         // 按钮
-        r.style.setProperty('--btn-w', document.getElementById('in-btn-w').value + 'px');
-        r.style.setProperty('--btn-h', document.getElementById('in-btn-h').value + 'px');
-        r.style.setProperty('--btn-bg', document.getElementById('in-btn-bg').value);
-        document.getElementById('cfg-btn-icon-disp').innerText = document.getElementById('in-btn-icon').value;
-        document.getElementById('backend-icon').innerText = document.getElementById('in-btn-icon').value;
+        root.setProperty('--btn-w', val('cfg-btn-w') + 'px');
+        document.getElementById('btn-icon').innerText = val('cfg-btn-icon');
+        document.getElementById('backend-toggle').innerText = val('cfg-badge');
 
-        // 名单显示
-        r.style.setProperty('--list-show', document.getElementById('in-list-show').value);
+        // 其他
+        root.setProperty('--history-show', val('cfg-history-show'));
     }
 
-    function initSlots() {
-        const count = parseInt(document.getElementById('in-draw-count').value);
-        const container = document.getElementById('slot-container');
-        container.innerHTML = '';
-        for(let i=0; i<count; i++) {
-            const slot = document.createElement('div');
-            slot.className = 'name-slot';
-            slot.innerText = '？';
-            container.appendChild(slot);
-        }
-    }
-
-    function saveNames() {
-        const text = document.getElementById('in-names').value;
-        pool = text.split(/[,，\n]/).map(n => n.trim()).filter(n => n !== "");
-        available = [...pool];
+    // --- 数据逻辑 ---
+    function saveData() {
+        const text = document.getElementById('cfg-names').value;
+        fullList = text.split(/[,，\n]/).map(s => s.trim()).filter(s => s);
+        available = [...new Set(fullList)]; // 去重
         winners = [];
         currentRound = 1;
-        document.getElementById('round-history').innerHTML = '';
-        document.getElementById('backend-record-list').innerText = '名单已加载，共' + pool.length + '人';
+        document.getElementById('history-area').innerHTML = "";
+        document.getElementById('status-round').innerText = 1;
+        updateStatus();
         initSlots();
     }
 
-    // --- 核心逻辑 ---
-    function toggleDraw() {
-        const count = parseInt(document.getElementById('in-draw-count').value);
-        const btnText = document.getElementById('draw-btn-text');
-        const aBg = document.getElementById('audio-bg');
-        const aWin = document.getElementById('audio-win');
+    function resetSystem() {
+        if(confirm("确定要清空所有中奖记录，重新开始吗？")) {
+            saveData();
+            alert("系统已重置，所有人均可再次中奖。");
+        }
+    }
+
+    function updateStatus() {
+        document.getElementById('status-left').innerText = available.length;
+    }
+
+    function initSlots() {
+        if(isRolling) return;
+        const count = parseInt(document.getElementById('cfg-count').value);
+        const container = document.getElementById('slots-area');
+        container.innerHTML = "";
+        for(let i=0; i<count; i++) {
+            container.innerHTML += `<div class="slot-item">?</div>`;
+        }
+    }
+
+    // --- 隐藏功能 (暗箱) ---
+    function handleSecretClick() {
+        clickCount++;
+        setTimeout(() => clickCount = 0, 500); // 500ms内如果不点第二次则清零
+        if (clickCount >= 2) {
+            const zone = document.getElementById('secret-zone');
+            zone.style.display = (zone.style.display === 'block') ? 'none' : 'block';
+            clickCount = 0;
+        }
+    }
+
+    function addCheatRule() {
+        const round = parseInt(document.getElementById('cheat-round').value);
+        const names = document.getElementById('cheat-who').value.split(/[,，]/).map(s=>s.trim()).filter(s=>s);
+        
+        if (!round || names.length === 0) return;
+
+        cheatRules[round] = names;
+        renderRules();
+        document.getElementById('cheat-who').value = '';
+    }
+
+    function renderRules() {
+        const div = document.getElementById('cheat-list-display');
+        let html = '';
+        for (let r in cheatRules) {
+            html += `<div class="cheat-item">
+                        <span>第 ${r} 轮必中: ${cheatRules[r].join(', ')}</span>
+                        <span class="cheat-del" onclick="deleteRule(${r})">×</span>
+                     </div>`;
+        }
+        div.innerHTML = html;
+    }
+
+    function deleteRule(r) {
+        delete cheatRules[r];
+        renderRules();
+    }
+
+    // --- 抽奖核心 ---
+    function handleDraw() {
+        const btnText = document.getElementById('btn-text');
+        const count = parseInt(document.getElementById('cfg-count').value);
+        const audioRoll = document.getElementById('audio-roll');
+        const audioWin = document.getElementById('audio-win');
 
         if (!isRolling) {
-            // 开始抽奖
+            // == 开始抽奖 ==
             if (available.length < count) {
-                alert("可用人员不足！请在后台重置名单。");
+                alert("剩余人数不足，请在后台重置！");
                 return;
             }
 
             isRolling = true;
             btnText.innerText = "停止抽奖";
             
-            // 音乐1：抽奖中
-            aBg.src = document.getElementById('in-mu1').value;
-            aBg.volume = document.getElementById('in-vol1').value;
-            aBg.play().catch(e => console.log("音频播放受阻"));
+            // 播放滚动音乐
+            audioRoll.src = document.getElementById('cfg-music1').value;
+            audioRoll.volume = document.getElementById('cfg-vol1').value;
+            audioRoll.play().catch(e => console.log("等待交互"));
 
-            const slots = document.querySelectorAll('.name-slot');
-            timer = setInterval(() => {
+            const slots = document.querySelectorAll('.slot-item');
+            
+            // 滚动动画逻辑
+            rollTimer = setInterval(() => {
                 slots.forEach(slot => {
-                    const randomIndex = Math.floor(Math.random() * available.length);
-                    slot.innerText = available[randomIndex];
-                    slot.className = "name-slot rolling-text";
+                    const r = Math.floor(Math.random() * available.length);
+                    slot.innerText = available[r];
+                    slot.className = 'slot-item mode-rolling';
                 });
             }, 80);
 
         } else {
-            // 结束抽奖
+            // == 停止抽奖 ==
             isRolling = false;
             btnText.innerText = "开始抽奖";
-            clearInterval(timer);
-
-            // 音乐控制：音乐1停，音乐2响
-            aBg.pause();
-            aBg.currentTime = 0;
+            clearInterval(rollTimer);
             
-            aWin.src = document.getElementById('in-mu2').value;
-            aWin.volume = document.getElementById('in-vol2').value;
-            aWin.play().catch(e => console.log("音频播放受阻"));
+            // 停止滚动音乐
+            audioRoll.pause();
+            audioRoll.currentTime = 0;
 
-            // 音量渐减停
+            // 播放中奖音乐 + 淡出
+            audioWin.src = document.getElementById('cfg-music2').value;
+            audioWin.volume = document.getElementById('cfg-vol2').value;
+            audioWin.play();
+            
+            // 3秒淡出逻辑
             setTimeout(() => {
-                let vol = aWin.volume;
+                let vol = audioWin.volume;
                 const fade = setInterval(() => {
-                    if (vol > 0.05) {
-                        vol -= 0.05;
-                        aWin.volume = vol;
-                    } else {
-                        aWin.pause();
-                        aWin.volume = document.getElementById('in-vol2').value;
-                        clearInterval(fade);
-                    }
+                    if (vol > 0.05) { vol -= 0.05; audioWin.volume = vol; }
+                    else { audioWin.pause(); clearInterval(fade); }
                 }, 100);
             }, 2500);
 
-            // 结果抽取
-            currentRoundWinners = [];
-            const slots = document.querySelectorAll('.name-slot');
-            for(let i=0; i<count; i++) {
-                const winIdx = Math.floor(Math.random() * available.length);
-                const pick = available.splice(winIdx, 1)[0];
-                currentWinnersUpdate(pick, slots[i], i);
+            // 决定中奖者
+            let roundWinners = [];
+            
+            // 1. 检查暗箱配置
+            if (cheatRules[currentRound]) {
+                const forced = cheatRules[currentRound];
+                forced.forEach(name => {
+                    // 必须确保这个人在池子里
+                    const idx = available.indexOf(name);
+                    if (idx !== -1 && roundWinners.length < count) {
+                        roundWinners.push(name);
+                        available.splice(idx, 1);
+                    }
+                });
             }
 
-            // 更新历史记录
-            addHistory(currentRoundWinners);
+            // 2. 随机补齐
+            while (roundWinners.length < count && available.length > 0) {
+                const idx = Math.floor(Math.random() * available.length);
+                roundWinners.push(available.splice(idx, 1)[0]);
+            }
+
+            winners.push(...roundWinners);
+
+            // 前台展示结果
+            const slots = document.querySelectorAll('.slot-item');
+            slots.forEach((slot, i) => {
+                if (roundWinners[i]) {
+                    slot.innerText = roundWinners[i];
+                    slot.className = 'slot-item mode-winner';
+                } else {
+                    slot.innerText = ""; // 空白占位
+                }
+            });
+
+            // 记录到历史
+            const history = document.getElementById('history-area');
+            const row = document.createElement('div');
+            row.className = 'history-item';
+            row.innerHTML = `<strong>第 ${currentRound} 轮：</strong> ${roundWinners.join('、')}`;
+            history.insertBefore(row, history.firstChild);
+
             currentRound++;
-        }
-    }
-
-    function currentWinnersUpdate(name, dom, index) {
-        currentRoundWinners.push(name);
-        winners.push(name);
-        dom.innerText = name;
-        dom.className = "name-slot winner-text";
-    }
-
-    function addHistory(list) {
-        // 前台显示
-        const history = document.getElementById('round-history');
-        const item = document.createElement('div');
-        item.className = 'history-item';
-        item.innerText = `第 ${currentRound} 轮中奖者: ${list.join('、')}`;
-        history.prepend(item);
-
-        // 后台记录
-        const rec = document.getElementById('backend-record-list');
-        if (rec.innerText.includes('人')) rec.innerHTML = '';
-        rec.innerHTML += `<div>轮次${currentRound}: ${list.join(',')}</div>`;
-    }
-
-    function resetLottery() {
-        if(confirm("确定要重置所有抽奖数据吗？（不会中奖的人将可以再次中奖）")) {
-            saveNames();
-            alert("系统已全量重置。中奖者名单已消除。");
+            document.getElementById('status-round').innerText = currentRound;
+            updateStatus();
         }
     }
 </script>
