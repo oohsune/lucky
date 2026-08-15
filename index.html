@@ -2,401 +2,650 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0c16">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>🍀 幸运时刻</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%80%3C/text%3E%3C/svg%3E">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html { width: 100%; height: 100%; overflow: hidden; }
+        /* ================================================================
+           基础 & 设计变量
+           ================================================================ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* ===== 背景 ===== */
-        #bg { position: fixed; inset: 0; z-index: 0; background-size: cover; background-position: center; transition: opacity 0.8s; }
-        #bg-overlay { position: fixed; inset: 0; z-index: 1; background: rgba(0,0,0,0.3); }
-        #particles { position: fixed; inset: 0; z-index: 2; }
-
-        /* ===== 主容器 ===== */
-        #app { position: relative; z-index: 3; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-
-        /* ===== 主题变量 ===== */
         :root {
             --primary: #ffd700;
-            --glow: rgba(255,215,0,0.4);
-            --text: #fff;
-            --font-title: 'Microsoft YaHei', sans-serif;
-            --font-body: 'Microsoft YaHei', sans-serif;
+            --glow: rgba(255, 215, 0, 0.45);
+            --text: #ffffff;
+            --text-soft: rgba(255, 255, 255, 0.66);
+            --text-faint: rgba(255, 255, 255, 0.4);
+            --glass: rgba(255, 255, 255, 0.07);
+            --glass-strong: rgba(18, 20, 36, 0.55);
+            --line: rgba(255, 255, 255, 0.13);
+            --radius: 22px;
+            --font-title: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            --font-body: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
         }
 
-        /* ===== 中国风 ===== */
-        .theme-chinese { --primary: #ff2222; --glow: rgba(255,34,34,0.4); --font-title: 'KaiTi', 'STKaiti', serif; --font-body: 'SimSun', 'STSong', serif; }
-        .theme-chinese .title { font-family: var(--font-title); letter-spacing: 12px; text-shadow: 0 0 30px var(--glow), 0 4px 20px rgba(0,0,0,0.5); }
-        .theme-chinese .subtitle { font-family: var(--font-body); letter-spacing: 8px; }
-        .theme-chinese .lottery-box { border: 3px solid rgba(255,34,34,0.4); border-radius: 8px; background: rgba(139,0,0,0.15); }
-        .theme-chinese .slot { font-family: var(--font-title); }
-        .theme-chinese .draw-btn { background: linear-gradient(135deg, #ff2222, #cc0000); border-radius: 8px; font-family: var(--font-title); letter-spacing: 6px; }
-        .theme-chinese .deco-left, .theme-chinese .deco-right { position: fixed; top: 50%; transform: translateY(-50%); font-size: 80px; opacity: 0.15; z-index: 2; }
-        .theme-chinese .deco-left { left: 30px; }
-        .theme-chinese .deco-right { right: 30px; }
+        html, body { height: 100%; overflow: hidden; }
 
-        /* ===== 科技感 ===== */
-        .theme-tech { --primary: #00ffff; --glow: rgba(0,255,255,0.4); --font-title: 'Consolas', 'Courier New', monospace; --font-body: 'Consolas', monospace; }
-        .theme-tech .title { font-family: var(--font-title); letter-spacing: 4px; text-transform: uppercase; text-shadow: 0 0 20px var(--glow), 0 0 40px var(--glow); }
-        .theme-tech .subtitle { font-family: var(--font-body); letter-spacing: 3px; opacity: 0.7; }
-        .theme-tech .lottery-box { border: 1px solid rgba(0,255,255,0.3); border-radius: 0; background: rgba(0,20,40,0.4); clip-path: polygon(0 10px, 10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px)); }
-        .theme-tech .slot { font-family: var(--font-title); }
-        .theme-tech .draw-btn { background: linear-gradient(135deg, #00ffff, #0088ff); border-radius: 0; clip-path: polygon(0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px)); font-family: var(--font-title); letter-spacing: 4px; text-transform: uppercase; }
-        .theme-tech .hud-corner { position: fixed; width: 60px; height: 60px; border: 2px solid rgba(0,255,255,0.3); z-index: 2; }
-        .theme-tech .hud-tl { top: 20px; left: 20px; border-right: none; border-bottom: none; }
-        .theme-tech .hud-tr { top: 20px; right: 20px; border-left: none; border-bottom: none; }
-        .theme-tech .hud-bl { bottom: 20px; left: 20px; border-right: none; border-top: none; }
-        .theme-tech .hud-br { bottom: 20px; right: 20px; border-left: none; border-top: none; }
+        body {
+            font-family: var(--font-body);
+            color: var(--text);
+            background: #0b0c16;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
 
-        /* ===== 黑金奢华 ===== */
-        .theme-luxury { --primary: #ffd700; --glow: rgba(255,215,0,0.4); --font-title: 'Georgia', 'Times New Roman', serif; --font-body: 'Georgia', serif; }
-        .theme-luxury .title { font-family: var(--font-title); letter-spacing: 8px; font-weight: 400; text-shadow: 0 0 30px var(--glow), 0 2px 10px rgba(0,0,0,0.8); }
-        .theme-luxury .subtitle { font-family: var(--font-body); letter-spacing: 6px; font-style: italic; opacity: 0.6; }
-        .theme-luxury .lottery-box { border: 1px solid rgba(255,215,0,0.3); border-radius: 0; background: rgba(0,0,0,0.3); }
-        .theme-luxury .slot { font-family: var(--font-title); font-weight: 400; }
-        .theme-luxury .draw-btn { background: linear-gradient(135deg, #ffd700, #b8860b); border-radius: 0; font-family: var(--font-title); letter-spacing: 6px; font-weight: 400; }
-        .theme-luxury .gold-line { position: fixed; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,215,0,0.5), transparent); z-index: 2; }
-        .theme-luxury .gold-line-top { top: 40px; left: 10%; right: 10%; }
-        .theme-luxury .gold-line-bottom { bottom: 40px; left: 10%; right: 10%; }
+        /* ================================================================
+           背景层
+           ================================================================ */
+        #bg {
+            position: fixed; inset: 0; z-index: 0;
+            background-size: cover; background-position: center;
+            transition: opacity 0.8s var(--ease);
+        }
+        #bg-overlay {
+            position: fixed; inset: 0; z-index: 1;
+            background:
+                radial-gradient(120% 90% at 50% 0%, rgba(0, 0, 0, 0.16), transparent 60%),
+                linear-gradient(180deg, rgba(0, 0, 0, 0.24), rgba(0, 0, 0, 0.44));
+        }
+        #particles { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
 
-        /* ===== 美妆风 ===== */
-        .theme-beauty { --primary: #ff69b4; --glow: rgba(255,105,180,0.4); --font-title: 'Comic Sans MS', 'Segoe Print', cursive; --font-body: 'Segoe UI', sans-serif; }
-        .theme-beauty .title { font-family: var(--font-title); letter-spacing: 4px; text-shadow: 0 0 20px var(--glow), 0 2px 10px rgba(0,0,0,0.3); }
-        .theme-beauty .subtitle { font-family: var(--font-body); letter-spacing: 3px; opacity: 0.7; }
-        .theme-beauty .lottery-box { border: 2px solid rgba(255,105,180,0.3); border-radius: 30px; background: rgba(255,182,193,0.1); }
-        .theme-beauty .slot { font-family: var(--font-title); }
-        .theme-beauty .draw-btn { background: linear-gradient(135deg, #ff69b4, #ff1493); border-radius: 30px; font-family: var(--font-title); letter-spacing: 3px; }
-        .theme-beauty .petal { position: fixed; font-size: 24px; opacity: 0.2; z-index: 2; animation: float 6s ease-in-out infinite; }
-        @keyframes float { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-20px) rotate(10deg)} }
+        /* ================================================================
+           主界面
+           ================================================================ */
+        #app {
+            position: relative; z-index: 3; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
+            animation: appIn 0.9s var(--ease) both;
+        }
+        @keyframes appIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
-        /* ===== 金融风 ===== */
-        .theme-finance { --primary: #ffd700; --glow: rgba(255,215,0,0.3); --font-title: 'Arial', 'Helvetica', sans-serif; --font-body: 'Arial', sans-serif; }
-        .theme-finance .title { font-family: var(--font-title); letter-spacing: 6px; font-weight: 700; text-shadow: 0 0 20px var(--glow), 0 2px 10px rgba(0,0,0,0.5); }
-        .theme-finance .subtitle { font-family: var(--font-body); letter-spacing: 4px; opacity: 0.6; }
-        .theme-finance .lottery-box { border: 2px solid rgba(255,215,0,0.2); border-radius: 4px; background: rgba(0,20,60,0.3); }
-        .theme-finance .slot { font-family: var(--font-title); font-weight: 700; }
-        .theme-finance .draw-btn { background: linear-gradient(135deg, #ffd700, #daa520); border-radius: 4px; font-family: var(--font-title); letter-spacing: 4px; font-weight: 700; }
-        .theme-finance .grid-line { position: fixed; background: rgba(255,215,0,0.05); z-index: 2; }
+        .hero { text-align: center; }
+        .title {
+            font-family: var(--font-title);
+            font-size: clamp(40px, 9vw, 64px);
+            font-weight: 800; letter-spacing: 4px; line-height: 1.2;
+            color: var(--primary);
+            text-shadow: 0 0 26px var(--glow), 0 6px 26px rgba(0, 0, 0, 0.45);
+            margin-bottom: 10px;
+            transition: all 0.5s var(--ease);
+        }
+        .subtitle {
+            font-size: clamp(13px, 3vw, 16px);
+            color: var(--text-soft); letter-spacing: 5px;
+            margin-bottom: 26px;
+            transition: all 0.5s var(--ease);
+        }
+
+        /* 状态 */
+        .status { display: flex; gap: 12px; margin-bottom: 22px; }
+        .status .chip {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 16px;
+            background: var(--glass); border: 1px solid var(--line);
+            border-radius: 999px; font-size: 13px; color: var(--text-soft);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            font-variant-numeric: tabular-nums;
+        }
+        .status b { color: var(--primary); font-size: 17px; font-weight: 800; }
+
+        /* 抽奖框 */
+        .lottery-box {
+            width: min(760px, 94vw); height: clamp(180px, 34vh, 250px);
+            display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
+            border-radius: var(--radius);
+            background: var(--glass-strong);
+            border: 1px solid var(--line);
+            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            margin-bottom: 26px;
+            transition: box-shadow 0.5s var(--ease);
+        }
+        .lottery-box::before {
+            content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+            background: radial-gradient(120% 60% at 50% 0%, var(--glow), transparent 55%);
+            opacity: 0.32;
+        }
+        .lottery-box.winner { box-shadow: 0 0 0 2px var(--primary), 0 0 60px var(--glow), 0 24px 70px rgba(0, 0, 0, 0.4); }
+
+        .slots { display: flex; gap: 14px; justify-content: center; align-items: center; width: 100%; padding: 0 20px; }
+        .slot {
+            flex: 1 1 0; max-width: 210px; height: 80px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: clamp(20px, 5.4vw, 34px); font-weight: 800; color: var(--text);
+            background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); border-radius: 14px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+            transition: all 0.25s var(--ease);
+        }
+        .slot.rolling { color: var(--text-soft); border-color: transparent; animation: flicker 0.09s infinite; }
+        .slot.winner {
+            color: var(--primary); border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 26px var(--glow);
+            animation: pop 0.6s var(--ease);
+        }
+        @keyframes flicker { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+        @keyframes pop {
+            0% { transform: scale(0.3); opacity: 0; }
+            60% { transform: scale(1.15); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 抽奖按钮 */
+        .draw-btn {
+            position: relative; overflow: hidden;
+            width: min(230px, 74vw); height: 62px;
+            border: none; cursor: pointer; border-radius: 999px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            font-family: var(--font-title);
+            font-size: clamp(16px, 4vw, 19px); font-weight: 800; letter-spacing: 4px;
+            color: #fff; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+            background: var(--primary);
+            box-shadow: 0 10px 34px var(--glow), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease), filter 0.3s var(--ease);
+            touch-action: manipulation;
+        }
+        .draw-btn::after {
+            content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 40%, rgba(0, 0, 0, 0.28));
+        }
+        .draw-btn > * { position: relative; z-index: 1; }
+        .draw-btn:hover { transform: translateY(-3px); filter: brightness(1.06); box-shadow: 0 16px 46px var(--glow); }
+        .draw-btn:active { transform: translateY(0) scale(0.97); }
+        .draw-btn.rolling {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            box-shadow: 0 8px 30px rgba(255, 107, 107, 0.45);
+            animation: pulse 1s ease-in-out infinite;
+        }
+        .draw-btn.rolling::after { background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent 45%, rgba(0, 0, 0, 0.2)); }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 8px 30px rgba(255, 107, 107, 0.45); }
+            50% { box-shadow: 0 8px 52px rgba(255, 107, 107, 0.75); }
+        }
+
+        /* 历史记录 */
+        .history {
+            width: min(560px, 92vw); max-height: 110px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 6px;
+            scrollbar-width: none; margin-top: 4px;
+        }
+        .history::-webkit-scrollbar { display: none; }
+        .h-item {
+            background: var(--glass); border: 1px solid var(--line);
+            padding: 7px 16px; border-radius: 12px;
+            font-size: 13px; color: var(--text-soft); text-align: center;
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            animation: fadeUp 0.5s var(--ease);
+        }
+        .h-item b { color: var(--primary); }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+        /* 设置按钮 */
+        #settings-btn {
+            position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 50;
+            width: 48px; height: 48px; border: 1px solid var(--line); border-radius: 16px;
+            background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            color: var(--text-soft); font-size: 20px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.25s var(--ease);
+            touch-action: manipulation;
+        }
+        #settings-btn:hover { transform: scale(1.08); background: rgba(255, 255, 255, 0.14); }
+
+        /* 快捷键提示 */
+        #shortcut-hint {
+            position: fixed; left: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 10;
+            font-size: 11px; color: var(--text-faint);
+            background: rgba(0, 0, 0, 0.3); padding: 7px 12px; border-radius: 999px;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        }
+        #shortcut-hint kbd {
+            background: rgba(255, 255, 255, 0.12); padding: 1px 5px; border-radius: 5px;
+            font-family: ui-monospace, "Consolas", monospace; font-size: 10px;
+        }
+
+        /* 音效提示 */
+        #audio-toast {
+            position: fixed; top: calc(16px + env(safe-area-inset-top)); left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            z-index: 100; background: rgba(10, 12, 22, 0.78); backdrop-filter: blur(14px);
+            color: #fff; padding: 9px 18px; border-radius: 999px; font-size: 13px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+            opacity: 0; pointer-events: none; white-space: nowrap;
+            transition: opacity 0.35s var(--ease), transform 0.35s var(--ease);
+        }
+        #audio-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* ================================================================
+           设置弹窗
+           ================================================================ */
+        #settings-overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s var(--ease);
+        }
+        #settings-overlay.open { opacity: 1; pointer-events: auto; }
+
+        #settings-modal {
+            width: min(520px, 94vw); max-height: min(560px, 86vh);
+            display: flex; flex-direction: column; overflow: hidden;
+            background: rgba(16, 18, 30, 0.92); backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55);
+            transform: translateY(14px) scale(0.97); opacity: 0;
+            transition: transform 0.3s var(--ease), opacity 0.3s var(--ease);
+        }
+        #settings-overlay.open #settings-modal { transform: none; opacity: 1; }
+
+        #settings-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; }
+        #settings-header h2 { font-size: 16px; font-weight: 700; color: #fff; }
+        #settings-close {
+            width: 32px; height: 32px; border: none; border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08); color: var(--text-soft);
+            font-size: 14px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        #settings-close:hover { background: rgba(255, 100, 100, 0.2); color: #ff6b6b; }
+
+        #settings-tabs {
+            display: flex; gap: 4px; padding: 0 14px 10px;
+            border-bottom: 1px solid var(--line);
+            overflow-x: auto; scrollbar-width: none;
+        }
+        #settings-tabs::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            padding: 9px 14px; border: none; background: transparent;
+            color: var(--text-faint); font-size: 13px; cursor: pointer;
+            border-radius: 10px; white-space: nowrap;
+            transition: all 0.2s; font-family: inherit;
+        }
+        .tab-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.06); }
+        .tab-btn.active { color: var(--primary); background: rgba(255, 255, 255, 0.08); font-weight: 600; }
+
+        #settings-body {
+            flex: 1; overflow-y: auto; padding: 16px 20px calc(20px + env(safe-area-inset-bottom));
+            scrollbar-width: thin;
+        }
+        .tab-panel { display: none; animation: fadeUp 0.3s var(--ease); }
+        .tab-panel.active { display: block; }
+
+        .field { margin-bottom: 14px; }
+        .field label { display: block; font-size: 12px; color: var(--text-faint); margin-bottom: 6px; letter-spacing: 0.5px; }
+        .field input[type="text"],
+        .field input[type="number"],
+        .field textarea,
+        .field select {
+            width: 100%; padding: 10px 12px;
+            border: 1px solid var(--line); border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05); color: #fff;
+            font-size: 13px; outline: none; font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--primary); }
+        .field textarea { resize: vertical; }
+        .field select option { background: #161828; }
+        .field input[type="range"] { width: 100%; accent-color: var(--primary); }
+        .field .hint { font-size: 11px; color: var(--text-faint); }
+        .field-row { display: flex; gap: 10px; }
+        .field-row > * { flex: 1; }
+
+        .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .theme-card {
+            aspect-ratio: 4 / 3; border-radius: 14px; cursor: pointer;
+            position: relative; overflow: hidden;
+            border: 2px solid transparent; background-size: cover; background-position: center;
+            transition: all 0.25s var(--ease);
+        }
+        .theme-card::after {
+            content: ""; position: absolute; inset: 0;
+            background: linear-gradient(180deg, transparent 45%, rgba(0, 0, 0, 0.55));
+        }
+        .theme-card:hover { transform: translateY(-3px); }
+        .theme-card.active { border-color: var(--primary); box-shadow: 0 0 18px var(--glow); }
+        .theme-card .t-name {
+            position: absolute; left: 0; right: 0; bottom: 6px; z-index: 1;
+            text-align: center; font-size: 11px; color: #fff; font-weight: 600;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .btn {
+            padding: 11px 14px; border: none; border-radius: 12px; cursor: pointer;
+            font-size: 13px; font-weight: 600; font-family: inherit;
+            transition: all 0.2s var(--ease);
+            touch-action: manipulation;
+        }
+        .btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+        .btn:active { transform: scale(0.97); }
+        .btn-gold { background: linear-gradient(135deg, #ffd700, #d4a017); color: #3a2c00; }
+        .btn-green { background: linear-gradient(135deg, #34a85e, #21844a); color: #fff; }
+        .btn-red { background: linear-gradient(135deg, #e05c50, #b3382e); color: #fff; }
+        .btn-ghost { background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid var(--line); }
+
+        #record-list {
+            font-size: 12px; background: rgba(255, 255, 255, 0.05);
+            padding: 10px 12px; border-radius: 12px;
+            max-height: 130px; overflow-y: auto;
+            color: var(--text-soft); line-height: 1.9;
+            scrollbar-width: thin;
+        }
+        #record-list .empty { color: var(--text-faint); text-align: center; }
+        #save-msg { font-size: 12px; color: var(--text-faint); margin-top: 12px; text-align: center; }
+
+        /* ================================================================
+           纸屑
+           ================================================================ */
+        .confetti { position: fixed; z-index: 100; pointer-events: none; animation: fall var(--dur, 3s) ease-out forwards; }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0) scale(1); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg) scale(0.3); opacity: 0; }
+        }
+
+        /* ================================================================
+           各主题：色彩与字体
+           ================================================================ */
+        .theme-chinese { --primary: #ff3b30; --glow: rgba(255, 59, 48, 0.45); --font-title: "Kaiti SC", "STKaiti", "KaiTi", "SimSun", serif; --font-body: "SimSun", "STSong", serif; }
+        .theme-tech { --primary: #3fe0ff; --glow: rgba(63, 224, 255, 0.45); --font-title: "Consolas", "Courier New", monospace; --font-body: "Consolas", monospace; }
+        .theme-luxury { --primary: #ffd700; --glow: rgba(255, 215, 0, 0.45); --font-title: "Georgia", "Times New Roman", serif; --font-body: "Georgia", serif; }
+        .theme-beauty { --primary: #ff7eb6; --glow: rgba(255, 126, 182, 0.45); --font-title: "Comic Sans MS", "Segoe Print", cursive; --font-body: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+        .theme-finance { --primary: #ffd84d; --glow: rgba(255, 216, 77, 0.4); --font-title: "Arial", "Helvetica", sans-serif; --font-body: "Arial", "PingFang SC", sans-serif; }
+        .theme-lifestyle { --primary: #ffa94d; --glow: rgba(255, 169, 77, 0.45); --font-title: "Segoe Print", "Comic Sans MS", cursive; --font-body: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+
+        /* ================================================================
+           各主题：装饰元素
+           ================================================================ */
+        .theme-chinese .deco-left, .theme-chinese .deco-right {
+            position: fixed; top: 50%; transform: translateY(-50%); z-index: 2;
+            font-size: 64px; opacity: 0.18; pointer-events: none;
+            filter: drop-shadow(0 0 24px rgba(255, 60, 60, 0.6));
+        }
+        .theme-chinese .deco-left { left: 24px; }
+        .theme-chinese .deco-right { right: 24px; }
+
+        .theme-tech .hud-corner {
+            position: fixed; width: 54px; height: 54px; z-index: 2;
+            border: 2px solid var(--glow); opacity: 0.5; pointer-events: none;
+        }
+        .theme-tech .hud-tl { top: 18px; left: 18px; border-right: none; border-bottom: none; }
+        .theme-tech .hud-tr { top: 18px; right: 18px; border-left: none; border-bottom: none; }
+        .theme-tech .hud-bl { bottom: 18px; left: 18px; border-right: none; border-top: none; }
+        .theme-tech .hud-br { bottom: 18px; right: 18px; border-left: none; border-top: none; }
+
+        .theme-luxury .gold-line {
+            position: fixed; height: 1px; z-index: 2; pointer-events: none;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            opacity: 0.5;
+        }
+        .theme-luxury .gold-line-top { top: 42px; left: 8%; right: 8%; }
+        .theme-luxury .gold-line-bottom { bottom: 42px; left: 8%; right: 8%; }
+
+        .theme-beauty .petal { position: fixed; font-size: 24px; opacity: 0.2; z-index: 2; pointer-events: none; animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-20px) rotate(10deg); } }
+
+        .theme-finance .grid-line { position: fixed; background: var(--glow); z-index: 2; pointer-events: none; opacity: 0.3; }
         .theme-finance .grid-v { width: 1px; top: 0; bottom: 0; }
         .theme-finance .grid-h { height: 1px; left: 0; right: 0; }
 
-        /* ===== 生活风 ===== */
-        .theme-lifestyle { --primary: #ff8c00; --glow: rgba(255,140,0,0.4); --font-title: 'Segoe Print', 'Comic Sans MS', cursive; --font-body: 'Segoe UI', sans-serif; }
-        .theme-lifestyle .title { font-family: var(--font-title); letter-spacing: 3px; text-shadow: 0 0 20px var(--glow), 0 2px 10px rgba(0,0,0,0.3); }
-        .theme-lifestyle .subtitle { font-family: var(--font-body); letter-spacing: 2px; opacity: 0.7; }
-        .theme-lifestyle .lottery-box { border: 3px dashed rgba(255,140,0,0.3); border-radius: 20px; background: rgba(255,200,100,0.1); }
-        .theme-lifestyle .slot { font-family: var(--font-title); }
-        .theme-lifestyle .draw-btn { background: linear-gradient(135deg, #ff8c00, #ff6600); border-radius: 20px; font-family: var(--font-title); letter-spacing: 2px; }
-        .theme-lifestyle .leaf { position: fixed; font-size: 20px; opacity: 0.15; z-index: 2; animation: sway 5s ease-in-out infinite; }
-        @keyframes sway { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)} }
+        .theme-lifestyle .leaf { position: fixed; font-size: 20px; opacity: 0.16; z-index: 2; pointer-events: none; animation: sway 5s ease-in-out infinite; }
+        @keyframes sway { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 
-        /* ===== 通用元素 ===== */
-        .title { font-size: 56px; font-weight: 900; color: var(--primary); margin-bottom: 8px; text-align: center; transition: all 0.5s; }
-        .subtitle { font-size: 16px; color: rgba(255,255,255,0.6); margin-bottom: 24px; text-align: center; transition: all 0.5s; }
-        .status { display: flex; gap: 24px; margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.5); }
-        .status b { color: var(--primary); font-size: 18px; }
-
-        .lottery-box {
-            width: min(700px, 90vw); height: 220px;
-            display: flex; align-items: center; justify-content: center;
-            position: relative; overflow: hidden;
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            box-shadow: 0 0 40px var(--glow);
-            transition: all 0.4s; margin-bottom: 28px;
-        }
-        .lottery-box.winner { box-shadow: 0 0 80px var(--glow); }
-
-        .slots { display: flex; gap: 16px; width: 100%; padding: 0 24px; justify-content: center; }
-        .slot {
-            flex: 1; max-width: 280px; text-align: center;
-            font-size: 2.6rem; font-weight: 800; color: var(--text);
-            min-height: 60px; display: flex; align-items: center; justify-content: center;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-        .slot.rolling { color: rgba(255,255,255,0.6); animation: flicker 0.1s infinite; }
-        @keyframes flicker { 0%,100%{opacity:0.6} 50%{opacity:1} }
-        .slot.winner { color: var(--primary); text-shadow: 0 0 20px var(--glow); animation: pop 0.6s cubic-bezier(0.175,0.885,0.32,1.275); }
-        @keyframes pop { 0%{transform:scale(0.3);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
-
-        .draw-btn {
-            width: 200px; height: 58px; border: none; cursor: pointer;
-            color: #1a1a2e; font-size: 1.1rem; font-weight: 800;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            box-shadow: 0 8px 30px var(--glow); transition: all 0.3s;
-        }
-        .draw-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 40px var(--glow); }
-        .draw-btn:active { transform: scale(0.97); }
-        .draw-btn.rolling { background: linear-gradient(135deg, #ff6b6b, #ee5a24) !important; box-shadow: 0 8px 30px rgba(255,107,107,0.4); animation: pulse 1s ease-in-out infinite; }
-        @keyframes pulse { 0%,100%{box-shadow:0 8px 30px rgba(255,107,107,0.4)} 50%{box-shadow:0 8px 50px rgba(255,107,107,0.7)} }
-
-        .history { margin-top: 20px; width: min(550px, 85vw); max-height: 90px; overflow-y: auto; scrollbar-width: none; }
-        .history::-webkit-scrollbar { display: none; }
-        .h-item { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 5px 14px; border-radius: 6px; margin-bottom: 4px; font-size: 12px; color: rgba(255,255,255,0.6); text-align: center; animation: fadeUp 0.4s; }
-        .h-item b { color: var(--primary); }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(15px)} to{opacity:1;transform:translateY(0)} }
-
-        .confetti { position: fixed; z-index: 100; pointer-events: none; animation: fall var(--dur,3s) ease-out forwards; }
-        @keyframes fall { 0%{transform:translateY(-10vh) rotate(0) scale(1);opacity:1} 100%{transform:translateY(110vh) rotate(720deg) scale(0.3);opacity:0} }
-
-        /* ===== 设置按钮 ===== */
-        #settings-btn {
-            position: fixed; bottom: 20px; right: 20px; z-index: 50;
-            width: 44px; height: 44px; border: 1px solid rgba(255,255,255,0.15);
-            background: rgba(255,255,255,0.08); border-radius: 12px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; color: rgba(255,255,255,0.7); transition: all 0.2s;
-            backdrop-filter: blur(10px);
-        }
-        #settings-btn:hover { background: rgba(255,255,255,0.15); transform: scale(1.05); }
-
-        /* ===== 设置弹窗 ===== */
-        #settings-overlay {
-            position: fixed; inset: 0; z-index: 200;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
-            display: none; align-items: center; justify-content: center;
-        }
-        #settings-overlay.open { display: flex; }
-        #settings-modal {
-            width: min(500px, 92vw); max-height: 85vh;
-            background: rgba(15,15,30,0.97); backdrop-filter: blur(30px);
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
-            overflow: hidden; display: flex; flex-direction: column;
-            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
-            animation: scaleIn 0.3s ease-out;
-        }
-        @keyframes scaleIn { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
-        #settings-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        #settings-header h2 { font-size: 15px; color: #fff; font-weight: 700; }
-        #settings-close { width: 30px; height: 30px; border: none; background: rgba(255,255,255,0.08); border-radius: 8px; cursor: pointer; font-size: 14px; color: rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center; }
-        #settings-close:hover { background: rgba(255,100,100,0.2); color: #ff6b6b; }
-        #settings-tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 0 10px; overflow-x: auto; scrollbar-width: none; }
-        #settings-tabs::-webkit-scrollbar { display: none; }
-        .tab-btn { padding: 10px 12px; border: none; background: none; color: rgba(255,255,255,0.4); font-size: 12px; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
-        .tab-btn:hover { color: rgba(255,255,255,0.7); }
-        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
-        #settings-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
-        .field { margin-bottom: 12px; }
-        .field label { display: block; font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
-        .field input, .field select, .field textarea { width: 100%; padding: 8px 10px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; font-size: 12px; outline: none; }
-        .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--primary); }
-        .field select option { background: #1a1a2e; }
-        .field-row { display: flex; gap: 8px; }
-        .field-row > * { flex: 1; }
-        .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .theme-card { height: 60px; border-radius: 10px; cursor: pointer; border: 2px solid transparent; position: relative; overflow: hidden; transition: all 0.2s; background-size: cover; background-position: center; }
-        .theme-card:hover { transform: scale(1.05); }
-        .theme-card.active { border-color: var(--primary); box-shadow: 0 0 12px var(--glow); }
-        .theme-card .t-name { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-size: 9px; color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-weight: 600; }
-        .btn { padding: 10px 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; }
-        .btn:hover { transform: translateY(-1px); opacity: 0.9; }
-        .btn-gold { background: linear-gradient(135deg, #ffd700, #b8860b); color: #1a1a2e; }
-        .btn-green { background: #2d8a4e; color: white; }
-        .btn-red { background: #c0392b; color: white; }
-        .btn-ghost { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.1); }
-        #save-msg { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 10px; text-align: center; }
-
-        #shortcut-hint { position: fixed; bottom: 16px; left: 16px; z-index: 10; font-size: 11px; color: rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 6px; backdrop-filter: blur(10px); }
-        #shortcut-hint kbd { background: rgba(255,255,255,0.1); padding: 1px 4px; border-radius: 3px; font-family: monospace; font-size: 10px; }
-        #audio-toast { position: fixed; top: 20px; right: 20px; z-index: 100; background: rgba(0,0,0,0.6); color: #fff; padding: 8px 14px; border-radius: 10px; font-size: 12px; backdrop-filter: blur(10px); display: none; }
-
+        /* ================================================================
+           移动端适配
+           ================================================================ */
         @media (max-width: 768px) {
-            .title { font-size: 32px; }
-            .subtitle { font-size: 13px; }
-            .lottery-box { height: 160px; }
-            .slot { font-size: 1.6rem; }
-            .draw-btn { width: 160px; height: 48px; font-size: 1rem; }
-            #settings-modal { width: 95vw; max-height: 90vh; }
+            html, body { overflow-y: auto; }
+            #app {
+                height: auto; min-height: 100dvh;
+                justify-content: flex-start;
+                padding-top: max(30px, env(safe-area-inset-top));
+                padding-bottom: calc(30px + env(safe-area-inset-bottom));
+            }
+            .title { font-size: clamp(26px, 8.5vw, 40px) !important; letter-spacing: 2px; }
+            .subtitle { letter-spacing: 3px; margin-bottom: 18px; }
+            .status { margin-bottom: 16px; }
+
+            .lottery-box { height: auto; min-height: 150px; padding: 16px 10px; margin-bottom: 18px; }
+            .slots { flex-wrap: wrap; gap: 8px; padding: 0 6px; }
+            .slot { flex: 1 1 0; min-width: 68px; max-width: none; height: 52px; font-size: clamp(14px, 4.4vw, 19px); border-radius: 12px; }
+
+            .draw-btn { height: 54px; }
+            .history { max-height: 120px; }
+
+            #settings-modal {
+                width: 100vw; max-width: none; height: 100dvh; max-height: 100dvh;
+                border-radius: 0; border: none;
+            }
             .theme-grid { grid-template-columns: repeat(2, 1fr); }
             #shortcut-hint { display: none; }
-            .theme-chinese .deco-left, .theme-chinese .deco-right { display: none; }
-            .theme-tech .hud-corner { display: none; }
+            #settings-btn { width: 46px; height: 46px; }
+
+            .theme-chinese .deco-left, .theme-chinese .deco-right,
+            .theme-tech .hud-corner,
+            .theme-luxury .gold-line { display: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
 <body>
 
-<div id="bg"></div>
-<div id="bg-overlay"></div>
-<canvas id="particles"></canvas>
-<div id="audio-toast">🔊 音效已激活</div>
+<div id="bg" aria-hidden="true"></div>
+<div id="bg-overlay" aria-hidden="true"></div>
+<canvas id="particles" aria-hidden="true"></canvas>
+<div id="theme-decorations" aria-hidden="true"></div>
 
-<!-- 主题装饰元素 -->
-<div id="theme-decorations"></div>
+<div id="audio-toast" role="status" aria-live="polite"></div>
 
-<!-- 主内容 -->
-<div id="app">
-    <h1 class="title" id="title">🎊 年度盛典大抽奖</h1>
-    <p class="subtitle" id="subtitle">✦ 让好运在这一刻发生 ✦</p>
+<!-- 主界面 -->
+<main id="app">
+    <header class="hero">
+        <h1 class="title" id="title">🎊 年度盛典大抽奖</h1>
+        <p class="subtitle" id="subtitle">愿此刻的好运，落向闪光的你</p>
+    </header>
 
-    <div class="status">
-        <div>剩余 <b id="remain">0</b> 人</div>
-        <div>已抽 <b id="rounds">0</b> 轮</div>
-    </div>
+    <section class="status" aria-label="抽奖进度">
+        <div class="chip">还有 <b id="remain">0</b> 位伙伴待揭晓</div>
+        <div class="chip">已开奖 <b id="rounds">0</b> 轮</div>
+    </section>
 
-    <div class="lottery-box" id="lottery-box">
+    <section class="lottery-box" id="lottery-box" aria-live="polite">
         <div class="slots" id="slots"></div>
-    </div>
+    </section>
 
-    <button class="draw-btn" id="draw-btn" onclick="toggleDraw()">
+    <button class="draw-btn" id="draw-btn">
         <span id="btn-icon">🎁</span>
         <span id="btn-text">开始抽奖</span>
     </button>
 
-    <div class="history" id="history"></div>
-</div>
+    <section class="history" id="history" aria-label="中奖记录"></section>
+</main>
 
-<!-- 快捷键提示 -->
+<button id="settings-btn" aria-label="设置">⚙️</button>
+
 <div id="shortcut-hint">
-    <kbd>空格</kbd> 抽奖 &nbsp; <kbd>F</kbd> 全屏 &nbsp; <kbd>Esc</kbd> 设置
+    <kbd>空格</kbd> 开奖 &nbsp;<kbd>F</kbd> 全屏 &nbsp;<kbd>Esc</kbd> 设置
 </div>
-
-<!-- 设置按钮 -->
-<button id="settings-btn" onclick="openSettings()">⚙️</button>
 
 <!-- 设置弹窗 -->
-<div id="settings-overlay" onclick="if(event.target===this)closeSettings()">
+<div id="settings-overlay" role="dialog" aria-modal="true" aria-label="设置">
     <div id="settings-modal">
-        <div id="settings-header">
+        <header id="settings-header">
             <h2>⚙️ 设置</h2>
-            <button id="settings-close" onclick="closeSettings()">✕</button>
-        </div>
-        <div id="settings-tabs">
+            <button id="settings-close" aria-label="关闭">✕</button>
+        </header>
+        <nav id="settings-tabs">
             <button class="tab-btn active" data-tab="theme">🎨 主题</button>
             <button class="tab-btn" data-tab="title">📌 标题</button>
             <button class="tab-btn" data-tab="sound">🎵 音效</button>
             <button class="tab-btn" data-tab="names">📋 名单</button>
             <button class="tab-btn" data-tab="records">📜 记录</button>
             <button class="tab-btn" data-tab="storage">💾 存储</button>
-        </div>
+        </nav>
         <div id="settings-body">
             <div class="tab-panel active" id="tab-theme">
                 <div class="field">
-                    <label>选择主题风格（每种风格有独立 UI 设计）</label>
+                    <label>挑一种喜欢的氛围吧</label>
                     <div class="theme-grid" id="theme-grid"></div>
                 </div>
             </div>
             <div class="tab-panel" id="tab-title">
-                <div class="field"><label>主标题</label><input type="text" id="in-title" value="🎊 年度盛典大抽奖" oninput="liveUpdate()"></div>
-                <div class="field"><label>副标题</label><input type="text" id="in-subtitle" value="✦ 让好运在这一刻发生 ✦" oninput="liveUpdate()"></div>
-                <div class="field"><label>标题大小</label><input type="number" id="in-size" value="56" oninput="liveUpdate()"></div>
+                <div class="field"><label>主标题</label><input type="text" id="in-title" value="🎊 年度盛典大抽奖"></div>
+                <div class="field"><label>副标题</label><input type="text" id="in-subtitle" value="愿此刻的好运，落向闪光的你"></div>
+                <div class="field"><label>标题大小</label><input type="number" id="in-size" value="56"></div>
                 <div class="field"><label>按钮图标</label>
-                    <select id="in-icon" onchange="liveUpdate()">
-                        <option value="🎁">🎁 礼物</option><option value="🔥">🔥 火热</option>
-                        <option value="⭐">⭐ 星星</option><option value="🏆">🏆 奖杯</option>
-                        <option value="💎">💎 钻石</option><option value="🧧">🧧 红包</option>
+                    <select id="in-icon">
+                        <option value="🎁">🎁 礼物</option>
+                        <option value="🔥">🔥 火热</option>
+                        <option value="⭐">⭐ 星星</option>
+                        <option value="🏆">🏆 奖杯</option>
+                        <option value="💎">💎 钻石</option>
+                        <option value="🧧">🧧 红包</option>
                     </select>
                 </div>
             </div>
             <div class="tab-panel" id="tab-sound">
-                <div class="field"><label>抽奖音乐文件（放在同目录）</label><input type="text" id="in-music-roll" value="音乐1.mp3" placeholder="音乐1.mp3"></div>
-                <div class="field"><label>中奖音乐文件（放在同目录）</label><input type="text" id="in-music-win" value="音乐2.mp3" placeholder="音乐2.mp3"></div>
+                <div class="field"><label>抽奖音乐（与 index.html 同目录）</label><input type="text" id="in-music-roll" value="音乐1.mp3"></div>
+                <div class="field"><label>中奖音乐（与 index.html 同目录）</label><input type="text" id="in-music-win" value="音乐2.mp3"></div>
                 <div class="field"><label>抽奖音量</label><input type="range" id="in-vol-roll" min="0" max="1" step="0.1" value="0.6"></div>
                 <div class="field"><label>中奖音量</label><input type="range" id="in-vol-win" min="0" max="1" step="0.1" value="0.8"></div>
                 <div class="field"><label>纸屑特效</label>
-                    <select id="in-confetti"><option value="on">开启 🎉</option><option value="off">关闭</option></select>
+                    <select id="in-confetti">
+                        <option value="on">开启 🎉</option>
+                        <option value="off">关闭</option>
+                    </select>
                 </div>
-                <div class="field"><div class="hint">将 mp3 文件放在 index.html 同目录即可使用自定义音乐</div></div>
+                <div class="field"><div class="hint">把 mp3 文件放在 index.html 同目录即可使用自定义音乐</div></div>
             </div>
             <div class="tab-panel" id="tab-names">
-                <div class="field"><label>同时抽奖人数</label><input type="number" id="in-count" value="1" min="1" max="10" oninput="initSlots()"></div>
-                <div class="field"><label>名单（逗号或换行隔开）</label>
+                <div class="field"><label>每次开奖人数</label><input type="number" id="in-count" value="1" min="1" max="10"></div>
+                <div class="field"><label>参与者名单（用逗号或换行分隔）</label>
                     <textarea id="in-names" rows="5">陈明,王强,李芳,张伟,赵敏,孙杰,周涛,吴磊,郑洁,冯平,褚卫,卫华,蒋云,沈霞,韩梅,杨立,朱勇,秦丽,尤文,许博</textarea>
                 </div>
                 <div class="field-row">
-                    <button class="btn btn-green" onclick="applyNames()">✓ 应用名单</button>
+                    <button class="btn btn-green" id="btn-apply">✓ 应用名单</button>
                 </div>
             </div>
             <div class="tab-panel" id="tab-records">
-                <div class="field"><label>中奖记录</label>
-                    <div id="record-list" style="font-size:12px;background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;max-height:120px;overflow-y:auto;color:rgba(255,255,255,0.5);">暂无记录</div>
-                </div>
+                <div class="field"><label>中奖记录</label><div id="record-list"></div></div>
                 <div class="field-row">
-                    <button class="btn btn-ghost" onclick="exportWinners()">📤 导出</button>
-                    <button class="btn btn-red" onclick="resetAll()">⟳ 重置</button>
+                    <button class="btn btn-ghost" id="btn-export">📋 复制</button>
+                    <button class="btn btn-red" id="btn-reset">⟳ 重置</button>
                 </div>
             </div>
             <div class="tab-panel" id="tab-storage">
                 <div class="field-row">
-                    <button class="btn btn-gold" onclick="saveSettings()">💾 保存</button>
-                    <button class="btn btn-ghost" onclick="clearSettings()">🗑️ 清除</button>
+                    <button class="btn btn-gold" id="btn-save">💾 保存</button>
+                    <button class="btn btn-ghost" id="btn-clear">🗑️ 清除</button>
                 </div>
-                <div id="save-msg">设置保存在浏览器中</div>
+                <div id="save-msg">设置会保存在浏览器里</div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- 音频元素 -->
-<audio id="audio-roll" loop></audio>
-<audio id="audio-win"></audio>
+<audio id="audio-roll" loop preload="auto"></audio>
+<audio id="audio-win" preload="auto"></audio>
 
 <script>
-    // ========== 主题配置 ==========
-    const THEMES = [
-        { id:'chinese',   name:'🏮 中国风',   bg:'assets/bg-chinese.png',   cls:'theme-chinese' },
-        { id:'tech',      name:'⚡ 科技感',   bg:'assets/bg-tech.png',      cls:'theme-tech' },
-        { id:'luxury',    name:'👑 黑金奢华', bg:'assets/bg-luxury.png',    cls:'theme-luxury' },
-        { id:'beauty',    name:'💄 美妆风',   bg:'assets/bg-beauty.png',    cls:'theme-beauty' },
-        { id:'finance',   name:'💰 金融风',   bg:'assets/bg-finance.png',   cls:'theme-finance' },
-        { id:'lifestyle', name:'🏡 生活风',   bg:'assets/bg-lifestyle.png', cls:'theme-lifestyle' },
+(function () {
+    "use strict";
+
+    /* ============ 主题配置 ============ */
+    var THEMES = [
+        { id: 'chinese',   name: '🏮 中国风',   bg: 'assets/bg-chinese.png',   cls: 'theme-chinese' },
+        { id: 'tech',      name: '⚡ 科技感',   bg: 'assets/bg-tech.png',      cls: 'theme-tech' },
+        { id: 'luxury',    name: '👑 黑金奢华', bg: 'assets/bg-luxury.png',    cls: 'theme-luxury' },
+        { id: 'beauty',    name: '💄 美妆风',   bg: 'assets/bg-beauty.png',    cls: 'theme-beauty' },
+        { id: 'finance',   name: '💰 金融风',   bg: 'assets/bg-finance.png',   cls: 'theme-finance' },
+        { id: 'lifestyle', name: '🏡 生活风',   bg: 'assets/bg-lifestyle.png', cls: 'theme-lifestyle' }
     ];
-    let curTheme = THEMES[0];
 
-    // ========== 粒子背景 ==========
-    const cv = document.getElementById('particles'), cx = cv.getContext('2d');
-    let pts = [], mx = 0, my = 0;
-    function resize() { cv.width = innerWidth; cv.height = innerHeight; }
-    addEventListener('resize', resize); resize();
-    addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+    var DEFAULTS = {
+        title: '🎊 年度盛典大抽奖',
+        subtitle: '愿此刻的好运，落向闪光的你',
+        size: '56', icon: '🎁', count: '1',
+        names: '陈明,王强,李芳,张伟,赵敏,孙杰,周涛,吴磊,郑洁,冯平,褚卫,卫华,蒋云,沈霞,韩梅,杨立,朱勇,秦丽,尤文,许博',
+        musicRoll: '音乐1.mp3', musicWin: '音乐2.mp3',
+        volRoll: '0.6', volWin: '0.8', confetti: 'on'
+    };
 
-    class Pt {
-        constructor() { this.init(); }
-        init() {
-            this.x = Math.random()*cv.width; this.y = Math.random()*cv.height;
-            this.s = Math.random()*3+1;
-            this.vx = (Math.random()-0.5)*0.3; this.vy = (Math.random()-0.5)*0.3;
-            this.o = Math.random()*0.3+0.1;
-        }
-        update() {
-            this.x += this.vx; this.y += this.vy;
-            const dx = mx-this.x, dy = my-this.y, d = Math.sqrt(dx*dx+dy*dy);
-            if (d < 120) { this.x -= dx*0.005; this.y -= dy*0.005; }
-            if (this.x<0||this.x>cv.width||this.y<0||this.y>cv.height) this.init();
-        }
-        draw() {
-            cx.beginPath(); cx.arc(this.x,this.y,this.s,0,Math.PI*2);
-            cx.fillStyle = `rgba(255,255,255,${this.o})`; cx.fill();
-        }
+    function q(id) { return document.getElementById(id); }
+
+    /* ============ 状态 ============ */
+    var curTheme = THEMES[0];
+    var pool = [], avail = [], winners = [];
+    var isRolling = false, timer = null, round = 1;
+    var audioOk = false;
+
+    /* ============ 粒子背景 ============ */
+    var cv = q('particles'), cx = cv.getContext('2d');
+    var pts = [], mx = 0, my = 0;
+
+    function resizeCanvas() { cv.width = innerWidth; cv.height = innerHeight; }
+    addEventListener('resize', resizeCanvas);
+    addEventListener('mousemove', function (e) { mx = e.clientX; my = e.clientY; });
+    addEventListener('touchmove', function (e) { mx = e.touches[0].clientX; my = e.touches[0].clientY; }, { passive: true });
+
+    function Pt() { this.init(); }
+    Pt.prototype.init = function () {
+        this.x = Math.random() * cv.width;
+        this.y = Math.random() * cv.height;
+        this.s = Math.random() * 3 + 1;
+        this.vx = (Math.random() - 0.5) * 0.3;
+        this.vy = (Math.random() - 0.5) * 0.3;
+        this.o = Math.random() * 0.3 + 0.1;
+    };
+    Pt.prototype.update = function () {
+        this.x += this.vx; this.y += this.vy;
+        var dx = mx - this.x, dy = my - this.y, d = Math.sqrt(dx * dx + dy * dy);
+        if (d < 120) { this.x -= dx * 0.005; this.y -= dy * 0.005; }
+        if (this.x < 0 || this.x > cv.width || this.y < 0 || this.y > cv.height) this.init();
+    };
+    Pt.prototype.draw = function () {
+        cx.beginPath(); cx.arc(this.x, this.y, this.s, 0, Math.PI * 2);
+        cx.fillStyle = 'rgba(255,255,255,' + this.o + ')';
+        cx.fill();
+    };
+
+    function initParticles() {
+        resizeCanvas();
+        pts = [];
+        var n = Math.min(90, Math.floor(cv.width * cv.height / 16000));
+        for (var i = 0; i < n; i++) pts.push(new Pt());
     }
-    for (let i=0;i<80;i++) pts.push(new Pt());
-
-    function drawParticles() {
-        cx.clearRect(0,0,cv.width,cv.height);
-        pts.forEach(p=>{p.update();p.draw();});
-        requestAnimationFrame(drawParticles);
+    function particleLoop() {
+        cx.clearRect(0, 0, cv.width, cv.height);
+        for (var i = 0; i < pts.length; i++) { pts[i].update(); pts[i].draw(); }
+        requestAnimationFrame(particleLoop);
     }
-    drawParticles();
 
-    // ========== 主题切换 ==========
+    /* ============ 主题切换 ============ */
     function applyTheme(t) {
         curTheme = t;
-        // 移除所有主题类
-        document.body.className = '';
-        // 添加新主题类
-        document.body.classList.add(t.cls);
-        // 设置背景
-        document.getElementById('bg').style.backgroundImage = `url(${t.bg})`;
-        // 更新装饰元素
+        document.body.className = t.cls;
+        q('bg').style.backgroundImage = 'url(' + t.bg + ')';
         updateDecorations(t.id);
-        // 更新主题选择器
-        document.querySelectorAll('.theme-card').forEach(el => el.classList.toggle('active', el.dataset.id===t.id));
+        var cards = document.querySelectorAll('.theme-card');
+        for (var i = 0; i < cards.length; i++) cards[i].classList.toggle('active', cards[i].dataset.id === t.id);
     }
 
     function updateDecorations(themeId) {
-        const deco = document.getElementById('theme-decorations');
+        var deco = q('theme-decorations');
         deco.innerHTML = '';
         if (themeId === 'chinese') {
             deco.innerHTML = '<div class="deco-left">🏮</div><div class="deco-right">🏮</div>';
@@ -405,317 +654,364 @@
         } else if (themeId === 'luxury') {
             deco.innerHTML = '<div class="gold-line gold-line-top"></div><div class="gold-line gold-line-bottom"></div>';
         } else if (themeId === 'beauty') {
-            for (let i=0;i<6;i++) {
-                const p = document.createElement('div');
-                p.className = 'petal';
-                p.innerText = '🌸';
-                p.style.left = (10+Math.random()*80)+'%';
-                p.style.top = (10+Math.random()*80)+'%';
-                p.style.animationDelay = (Math.random()*3)+'s';
+            for (var i = 0; i < 6; i++) {
+                var p = document.createElement('div');
+                p.className = 'petal'; p.textContent = '🌸';
+                p.style.left = (10 + Math.random() * 80) + '%';
+                p.style.top = (10 + Math.random() * 80) + '%';
+                p.style.animationDelay = (Math.random() * 3) + 's';
                 deco.appendChild(p);
             }
         } else if (themeId === 'finance') {
-            for (let i=1;i<6;i++) {
-                const v = document.createElement('div');
-                v.className = 'grid-line grid-v';
-                v.style.left = (i*16.66)+'%';
-                deco.appendChild(v);
+            for (var v = 1; v < 6; v++) {
+                var elV = document.createElement('div');
+                elV.className = 'grid-line grid-v';
+                elV.style.left = (v * 16.66) + '%';
+                deco.appendChild(elV);
             }
-            for (let i=1;i<5;i++) {
-                const h = document.createElement('div');
-                h.className = 'grid-line grid-h';
-                h.style.top = (i*20)+'%';
-                deco.appendChild(h);
+            for (var h = 1; h < 5; h++) {
+                var elH = document.createElement('div');
+                elH.className = 'grid-line grid-h';
+                elH.style.top = (h * 20) + '%';
+                deco.appendChild(elH);
             }
         } else if (themeId === 'lifestyle') {
-            for (let i=0;i<5;i++) {
-                const l = document.createElement('div');
-                l.className = 'leaf';
-                l.innerText = '🍃';
-                l.style.left = (10+Math.random()*80)+'%';
-                l.style.top = (10+Math.random()*80)+'%';
-                l.style.animationDelay = (Math.random()*2)+'s';
-                deco.appendChild(l);
+            for (var l = 0; l < 5; l++) {
+                var leaf = document.createElement('div');
+                leaf.className = 'leaf'; leaf.textContent = '🍃';
+                leaf.style.left = (10 + Math.random() * 80) + '%';
+                leaf.style.top = (10 + Math.random() * 80) + '%';
+                leaf.style.animationDelay = (Math.random() * 2) + 's';
+                deco.appendChild(leaf);
             }
         }
     }
 
     function initThemeGrid() {
-        const g = document.getElementById('theme-grid');
-        THEMES.forEach(t => {
-            const d = document.createElement('div');
-            d.className = 'theme-card'+(t.id==='chinese'?' active':'');
-            d.dataset.id = t.id;
-            d.style.backgroundImage = `url(${t.bg})`;
-            d.innerHTML = `<div class="t-name">${t.name}</div>`;
-            d.onclick = () => { applyTheme(t); };
-            g.appendChild(d);
-        });
+        var g = q('theme-grid');
+        g.innerHTML = '';
+        for (var i = 0; i < THEMES.length; i++) {
+            (function (t) {
+                var d = document.createElement('div');
+                d.className = 'theme-card';
+                d.dataset.id = t.id;
+                d.style.backgroundImage = 'url(' + t.bg + ')';
+                d.innerHTML = '<div class="t-name">' + t.name + '</div>';
+                d.addEventListener('click', function () { applyTheme(t); });
+                g.appendChild(d);
+            })(THEMES[i]);
+        }
     }
 
-    // ========== 设置面板 ==========
-    function openSettings() { document.getElementById('settings-overlay').classList.add('open'); updateRecords(); }
-    function closeSettings() { document.getElementById('settings-overlay').classList.remove('open'); }
-
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-            document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
-        };
-    });
-
-    // ========== 音效 ==========
-    let audioOk = false;
-    const toast = document.getElementById('audio-toast');
-    const audioRoll = document.getElementById('audio-roll');
-    const audioWin = document.getElementById('audio-win');
-
+    /* ============ 音效 ============ */
     function initAudio() {
         if (audioOk) return;
         audioOk = true;
-        toast.style.display='block'; toast.textContent='🔊 音效已激活';
-        setTimeout(()=>toast.style.display='none',2500);
+        var t = q('audio-toast');
+        t.textContent = '♪ 音效已开启，好运要开始啦';
+        t.classList.add('show');
+        setTimeout(function () { t.classList.remove('show'); }, 2400);
     }
-    document.addEventListener('click', ()=>initAudio(), {once:true});
 
     function playRollMusic() {
-        const src = document.getElementById('in-music-roll').value;
-        const vol = parseFloat(document.getElementById('in-vol-roll').value);
+        var src = q('in-music-roll').value;
+        var vol = parseFloat(q('in-vol-roll').value);
         if (vol <= 0 || !src) return;
-        audioRoll.src = src;
-        audioRoll.volume = vol;
-        audioRoll.play().catch(()=>{});
+        var a = q('audio-roll');
+        a.src = src; a.volume = vol;
+        a.play().catch(function () {});
     }
 
     function stopRollMusic() {
-        audioRoll.pause();
-        audioRoll.currentTime = 0;
+        var a = q('audio-roll');
+        a.pause(); a.currentTime = 0;
     }
 
     function playWinMusic() {
-        const src = document.getElementById('in-music-win').value;
-        const vol = parseFloat(document.getElementById('in-vol-win').value);
+        var src = q('in-music-win').value;
+        var vol = parseFloat(q('in-vol-win').value);
         if (vol <= 0 || !src) return;
-        audioWin.src = src;
-        audioWin.volume = vol;
-        audioWin.play().catch(()=>{});
-        // 3秒后淡出
-        setTimeout(() => {
-            let v = audioWin.volume;
-            const fade = setInterval(() => {
-                if (v > 0.05) { v -= 0.05; audioWin.volume = v; }
-                else { audioWin.pause(); audioWin.volume = vol; clearInterval(fade); }
+        var a = q('audio-win');
+        a.src = src; a.volume = vol;
+        a.play().catch(function () {});
+        setTimeout(function () {
+            var v = a.volume;
+            var fade = setInterval(function () {
+                if (v > 0.05) { v -= 0.05; a.volume = v; }
+                else { a.pause(); a.volume = vol; clearInterval(fade); }
             }, 100);
         }, 3000);
     }
 
-    // ========== 纸屑 ==========
+    /* ============ 纸屑 ============ */
     function confetti() {
-        if (document.getElementById('in-confetti').value==='off') return;
-        const colors=['#ffd700','#ff6b6b','#48dbfb','#ff9ff3','#54a0ff','#ff4757','#2ed573','#ff6348','#ffa502'];
-        for (let i=0;i<80;i++) {
-            const p=document.createElement('div'); p.className='confetti';
-            const c=colors[Math.floor(Math.random()*colors.length)], s=Math.random()*8+4;
-            p.style.cssText=`left:${Math.random()*100}%;top:-10px;width:${s}px;height:${s*(Math.random()*0.5+0.5)}px;background:${c};border-radius:${Math.random()>0.5?'50%':'2px'};--dur:${Math.random()*2+2}s;animation-delay:${Math.random()*1.5}s;`;
+        if (q('in-confetti').value === 'off') return;
+        var colors = ['#ffd700', '#ff6b6b', '#48dbfb', '#ff9ff3', '#54a0ff', '#ff4757', '#2ed573', '#ff6348', '#ffa502'];
+        for (var i = 0; i < 80; i++) {
+            var p = document.createElement('div');
+            p.className = 'confetti';
+            var c = colors[Math.floor(Math.random() * colors.length)];
+            var s = Math.random() * 8 + 4;
+            p.style.cssText = 'left:' + Math.random() * 100 + '%;top:-10px;width:' + s + 'px;height:' + s * (Math.random() * 0.5 + 0.5) + 'px;background:' + c + ';border-radius:' + (Math.random() > 0.5 ? '50%' : '2px') + ';--dur:' + (Math.random() * 2 + 2) + 's;animation-delay:' + Math.random() * 1.5 + 's;';
             document.body.appendChild(p);
-            setTimeout(()=>p.remove(),5000);
+            setTimeout(function () { p.remove(); }, 5000);
         }
     }
 
-    // ========== 核心逻辑 ==========
-    let pool=[], avail=[], winners=[], isRolling=false, timer=null, round=1;
+    /* ============ 设置面板 ============ */
+    function openSettings() { q('settings-overlay').classList.add('open'); updateRecords(); }
+    function closeSettings() { q('settings-overlay').classList.remove('open'); }
 
     function liveUpdate() {
-        document.getElementById('title').innerText = document.getElementById('in-title').value;
-        document.getElementById('subtitle').innerText = document.getElementById('in-subtitle').value;
-        document.getElementById('title').style.fontSize = document.getElementById('in-size').value+'px';
-        document.getElementById('btn-icon').innerText = document.getElementById('in-icon').value;
+        q('title').textContent = q('in-title').value;
+        q('subtitle').textContent = q('in-subtitle').value;
+        q('title').style.fontSize = q('in-size').value + 'px';
+        q('btn-icon').textContent = q('in-icon').value;
     }
 
+    /* ============ 名单 ============ */
     function initSlots() {
-        const n = parseInt(document.getElementById('in-count').value)||1;
-        const c = document.getElementById('slots'); c.innerHTML='';
-        for(let i=0;i<n;i++){ const s=document.createElement('div'); s.className='slot'; s.innerText='✨'; c.appendChild(s); }
+        var n = parseInt(q('in-count').value) || 1;
+        var c = q('slots');
+        c.innerHTML = '';
+        for (var i = 0; i < n; i++) {
+            var s = document.createElement('div');
+            s.className = 'slot';
+            s.textContent = '✨';
+            c.appendChild(s);
+        }
     }
 
     function applyNames() {
-        const text = document.getElementById('in-names').value;
-        pool = text.split(/[,，\n]/).map(n=>n.trim()).filter(n=>n!=="");
-        avail = pool.filter(n=>!winners.includes(n));
-        document.getElementById('remain').innerText = avail.length;
+        var text = q('in-names').value;
+        pool = text.split(/[,，\n]/).map(function (n) { return n.trim(); }).filter(function (n) { return n !== ''; });
+        avail = pool.filter(function (n) { return winners.indexOf(n) === -1; });
+        q('remain').textContent = avail.length;
         initSlots(); updateRecords();
         closeSettings();
     }
 
+    /* ============ 记录 ============ */
     function updateRecords() {
-        const el = document.getElementById('record-list');
-        el.innerHTML = winners.length===0 ? '暂无记录' : winners.map((w,i)=>`<div>🏆 第${i+1}轮: ${w}</div>`).join('');
+        var el = q('record-list');
+        if (!winners.length) {
+            el.innerHTML = '<div class="empty">还没有中奖记录，等你的第一次好运</div>';
+            return;
+        }
+        el.innerHTML = winners.map(function (w, i) {
+            return '<div>🏆 第' + (i + 1) + '轮 · ' + w + '</div>';
+        }).join('');
     }
 
     function exportWinners() {
-        if (winners.length===0) { alert('暂无中奖记录'); return; }
-        const text = winners.map((w,i)=>`第${i+1}轮: ${w}`).join('\n');
-        navigator.clipboard.writeText(text).then(()=>alert('✅ 已复制到剪贴板')).catch(()=>{
-            const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta);
-            ta.select(); document.execCommand('copy'); ta.remove(); alert('✅ 已复制到剪贴板');
+        if (!winners.length) { alert('还没有中奖记录哦'); return; }
+        var text = winners.map(function (w, i) { return '第' + (i + 1) + '轮：' + w; }).join('\n');
+        navigator.clipboard.writeText(text).then(function () {
+            alert('中奖名单已复制到剪贴板');
+        }).catch(function () {
+            var ta = document.createElement('textarea');
+            ta.value = text; document.body.appendChild(ta);
+            ta.select(); document.execCommand('copy'); ta.remove();
+            alert('中奖名单已复制到剪贴板');
         });
     }
 
     function resetAll() {
-        if (!confirm('确定要重置所有数据吗？')) return;
-        winners=[]; round=1; avail=[...pool];
-        document.getElementById('history').innerHTML='';
-        document.getElementById('remain').innerText=avail.length;
-        document.getElementById('rounds').innerText='0';
-        document.getElementById('lottery-box').classList.remove('winner');
+        if (!confirm('确定要重置所有记录吗？开奖历史将被清空')) return;
+        winners = []; round = 1; avail = pool.slice();
+        q('history').innerHTML = '';
+        q('remain').textContent = avail.length;
+        q('rounds').textContent = '0';
+        q('lottery-box').classList.remove('winner');
         initSlots(); updateRecords();
     }
 
+    /* ============ 存储 ============ */
     function saveSettings() {
         try {
-            const data = {
+            var data = {
                 theme: curTheme.id,
                 s: {
-                    title: document.getElementById('in-title').value,
-                    subtitle: document.getElementById('in-subtitle').value,
-                    size: document.getElementById('in-size').value,
-                    icon: document.getElementById('in-icon').value,
-                    count: document.getElementById('in-count').value,
-                    names: document.getElementById('in-names').value,
-                    musicRoll: document.getElementById('in-music-roll').value,
-                    musicWin: document.getElementById('in-music-win').value,
-                    volRoll: document.getElementById('in-vol-roll').value,
-                    volWin: document.getElementById('in-vol-win').value,
-                    confetti: document.getElementById('in-confetti').value
+                    title: q('in-title').value, subtitle: q('in-subtitle').value, size: q('in-size').value,
+                    icon: q('in-icon').value, count: q('in-count').value, names: q('in-names').value,
+                    musicRoll: q('in-music-roll').value, musicWin: q('in-music-win').value,
+                    volRoll: q('in-vol-roll').value, volWin: q('in-vol-win').value, confetti: q('in-confetti').value
                 },
-                state: { pool, avail, winners, round }
+                state: { pool: pool, avail: avail, winners: winners, round: round }
             };
             localStorage.setItem('luckyMoment', JSON.stringify(data));
-            document.getElementById('save-msg').innerText = '✅ 已保存 '+new Date().toLocaleTimeString();
-        } catch(e) { document.getElementById('save-msg').innerText = '❌ 保存失败'; }
+            q('save-msg').textContent = '已保存 ' + new Date().toLocaleTimeString();
+        } catch (e) {
+            q('save-msg').textContent = '保存失败，请重试';
+        }
     }
 
     function loadSettings() {
         try {
-            const raw = localStorage.getItem('luckyMoment');
-            if (!raw) return;
-            const data = JSON.parse(raw);
-            if (data.theme) { const t=THEMES.find(t=>t.id===data.theme); if(t) applyTheme(t); }
-            const s = data.s;
-            if (s) {
-                document.getElementById('in-title').value = s.title||'🎊 年度盛典大抽奖';
-                document.getElementById('in-subtitle').value = s.subtitle||'✦ 让好运在这一刻发生 ✦';
-                document.getElementById('in-size').value = s.size||'56';
-                document.getElementById('in-icon').value = s.icon||'🎁';
-                document.getElementById('in-count').value = s.count||'1';
-                document.getElementById('in-names').value = s.names||'';
-                document.getElementById('in-music-roll').value = s.musicRoll||'音乐1.mp3';
-                document.getElementById('in-music-win').value = s.musicWin||'音乐2.mp3';
-                document.getElementById('in-vol-roll').value = s.volRoll||'0.6';
-                document.getElementById('in-vol-win').value = s.volWin||'0.8';
-                document.getElementById('in-confetti').value = s.confetti||'on';
+            var raw = localStorage.getItem('luckyMoment');
+            if (!raw) return false;
+            var data = JSON.parse(raw);
+            if (data.theme) {
+                var t = null;
+                for (var i = 0; i < THEMES.length; i++) if (THEMES[i].id === data.theme) { t = THEMES[i]; break; }
+                if (t) applyTheme(t);
             }
+            var s = data.s || {};
+            q('in-title').value = s.title || DEFAULTS.title;
+            q('in-subtitle').value = s.subtitle || DEFAULTS.subtitle;
+            q('in-size').value = s.size || DEFAULTS.size;
+            q('in-icon').value = s.icon || DEFAULTS.icon;
+            q('in-count').value = s.count || DEFAULTS.count;
+            q('in-names').value = s.names || DEFAULTS.names;
+            q('in-music-roll').value = s.musicRoll || DEFAULTS.musicRoll;
+            q('in-music-win').value = s.musicWin || DEFAULTS.musicWin;
+            q('in-vol-roll').value = s.volRoll || DEFAULTS.volRoll;
+            q('in-vol-win').value = s.volWin || DEFAULTS.volWin;
+            q('in-confetti').value = s.confetti || DEFAULTS.confetti;
             if (data.state) {
-                pool=data.state.pool||[]; avail=data.state.avail||[...pool];
-                winners=data.state.winners||[]; round=data.state.round||1;
+                pool = data.state.pool || [];
+                avail = data.state.avail || pool.slice();
+                winners = data.state.winners || [];
+                round = data.state.round || 1;
             }
             liveUpdate(); initSlots();
-            const h=document.getElementById('history'); h.innerHTML='';
-            winners.forEach((w,i)=>{
-                const d=document.createElement('div'); d.className='h-item';
-                d.innerHTML=`<b>🏆 第${i+1}轮</b> · ${w}`; h.prepend(d);
-            });
-            document.getElementById('remain').innerText=avail.length;
-            document.getElementById('rounds').innerText=winners.length;
-            document.getElementById('save-msg').innerText='✅ 已恢复';
-        } catch(e) { applyNames(); liveUpdate(); initSlots(); }
+            var h = q('history');
+            h.innerHTML = '';
+            for (var j = 0; j < winners.length; j++) {
+                var d = document.createElement('div');
+                d.className = 'h-item';
+                d.innerHTML = '<b>🏆 第' + (j + 1) + '轮</b> · ' + winners[j];
+                h.prepend(d);
+            }
+            q('remain').textContent = avail.length;
+            q('rounds').textContent = winners.length;
+            q('save-msg').textContent = '已恢复之前的设置';
+            return true;
+        } catch (e) {
+            return false;
+        }
     }
 
     function clearSettings() {
-        if (!confirm('确定要清除所有已保存的设置吗？')) return;
+        if (!confirm('确定要清除已保存的设置吗？')) return;
         localStorage.removeItem('luckyMoment');
-        document.getElementById('save-msg').innerText='🗑️ 已清除';
+        q('save-msg').textContent = '已清除，回到初始状态';
         applyTheme(THEMES[0]); applyNames(); liveUpdate(); initSlots();
     }
 
-    // ========== 抽奖 ==========
+    /* ============ 抽奖 ============ */
     function toggleDraw() {
-        const count = parseInt(document.getElementById('in-count').value)||1;
-        const btn = document.getElementById('draw-btn');
-        const btnText = document.getElementById('btn-text');
-        const box = document.getElementById('lottery-box');
+        var count = parseInt(q('in-count').value) || 1;
+        var btn = q('draw-btn'), btnText = q('btn-text'), box = q('lottery-box');
         initAudio();
 
         if (!isRolling) {
-            if (avail.length < count) { alert('🎯 可抽人数不足！'); return; }
+            if (avail.length < count) { alert('可抽人数不足，先在「名单」里添加参与者吧'); return; }
             isRolling = true;
-            btnText.innerText = '✋ 停！';
+            btnText.textContent = '停一下';
             btn.classList.add('rolling');
             playRollMusic();
-            const slots = document.querySelectorAll('.slot');
-            timer = setInterval(()=>{
-                slots.forEach(s=>{
-                    s.innerText = avail[Math.floor(Math.random()*avail.length)];
-                    s.className = 'slot rolling';
-                });
-            },80);
+            var slots = document.querySelectorAll('.slot');
+            timer = setInterval(function () {
+                for (var i = 0; i < slots.length; i++) {
+                    slots[i].textContent = avail[Math.floor(Math.random() * avail.length)];
+                    slots[i].className = 'slot rolling';
+                }
+            }, 80);
         } else {
             isRolling = false;
-            btnText.innerText = '🎯 开始抽奖';
+            btnText.textContent = '开始抽奖';
             btn.classList.remove('rolling');
             clearInterval(timer);
             stopRollMusic();
             box.classList.add('winner');
 
-            const slots = document.querySelectorAll('.slot');
-            const roundWinners = [];
-            for (let i=0;i<count;i++) {
-                const idx = Math.floor(Math.random()*avail.length);
-                const pick = avail.splice(idx,1)[0];
+            var slotsEl = document.querySelectorAll('.slot');
+            var roundWinners = [];
+            for (var k = 0; k < count; k++) {
+                var idx = Math.floor(Math.random() * avail.length);
+                var pick = avail.splice(idx, 1)[0];
                 roundWinners.push(pick); winners.push(pick);
-                slots[i].innerText = pick;
-                slots[i].className = 'slot winner';
+                slotsEl[k].textContent = pick;
+                slotsEl[k].className = 'slot winner';
             }
 
-            const h = document.getElementById('history');
-            const item = document.createElement('div');
+            var item = document.createElement('div');
             item.className = 'h-item';
-            item.innerHTML = `<b>🏆 第${round}轮</b> · ${roundWinners.join('、')}`;
-            h.prepend(item);
+            item.innerHTML = '<b>🏆 第' + round + '轮</b> · ' + roundWinners.join('、');
+            q('history').prepend(item);
 
             round++;
-            document.getElementById('remain').innerText = avail.length;
-            document.getElementById('rounds').innerText = winners.length;
+            q('remain').textContent = avail.length;
+            q('rounds').textContent = winners.length;
             playWinMusic();
             confetti();
-            setTimeout(()=>box.classList.remove('winner'),3000);
+            setTimeout(function () { box.classList.remove('winner'); }, 3000);
         }
     }
 
-    // ========== 全屏 ==========
     function toggleFullscreen() {
-        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function () {});
         else document.exitFullscreen();
     }
 
-    // ========== 快捷键 ==========
-    document.addEventListener('keydown', e => {
-        if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT') return;
-        if (e.code==='Space'||e.code==='Enter') { e.preventDefault(); toggleDraw(); }
-        if (e.code==='KeyF') toggleFullscreen();
-        if (e.code==='Escape') closeSettings();
-    });
+    /* ============ 事件绑定 ============ */
+    function bindTabs() {
+        q('settings-tabs').addEventListener('click', function (e) {
+            var btn = e.target.closest('.tab-btn');
+            if (!btn) return;
+            var tabs = document.querySelectorAll('.tab-btn');
+            var panels = document.querySelectorAll('.tab-panel');
+            for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+            for (var j = 0; j < panels.length; j++) panels[j].classList.remove('active');
+            btn.classList.add('active');
+            q('tab-' + btn.dataset.tab).classList.add('active');
+        });
+    }
 
-    // ========== 初始化 ==========
-    window.onload = () => {
+    function bindEvents() {
+        q('draw-btn').addEventListener('click', toggleDraw);
+        q('settings-btn').addEventListener('click', openSettings);
+        q('settings-close').addEventListener('click', closeSettings);
+        q('settings-overlay').addEventListener('click', function (e) {
+            if (e.target === q('settings-overlay')) closeSettings();
+        });
+        q('btn-apply').addEventListener('click', applyNames);
+        q('btn-export').addEventListener('click', exportWinners);
+        q('btn-reset').addEventListener('click', resetAll);
+        q('btn-save').addEventListener('click', saveSettings);
+        q('btn-clear').addEventListener('click', clearSettings);
+
+        ['in-title', 'in-subtitle', 'in-size', 'in-icon'].forEach(function (id) {
+            q(id).addEventListener('input', liveUpdate);
+        });
+        q('in-count').addEventListener('input', initSlots);
+        bindTabs();
+
+        document.addEventListener('click', function () { initAudio(); }, { once: true });
+
+        document.addEventListener('keydown', function (e) {
+            var tag = e.target.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+            if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); toggleDraw(); }
+            if (e.code === 'KeyF') toggleFullscreen();
+            if (e.code === 'Escape') closeSettings();
+        });
+    }
+
+    /* ============ 初始化 ============ */
+    function init() {
+        bindEvents();
         initThemeGrid();
         applyTheme(THEMES[0]);
-        const saved = localStorage.getItem('luckyMoment');
-        if (saved) loadSettings();
-        else { applyNames(); liveUpdate(); initSlots(); }
-    };
+        var restored = loadSettings();
+        if (!restored) { applyNames(); liveUpdate(); initSlots(); }
+    }
+
+    initParticles();
+    particleLoop();
+    window.addEventListener('load', init);
+})();
 </script>
 </body>
 </html>
