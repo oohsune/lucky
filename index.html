@@ -804,15 +804,39 @@
            7.9 奖项列表（桌面左侧悬浮 + 移动端底部浮层）
            ================================================================== */
         #prize-dock {
-            position: fixed; left: 18px; top: 50%; transform: translateY(-50%); z-index: 40;
-            display: flex; flex-direction: column; gap: 8px;
-            min-width: 148px; max-width: 196px; padding: 14px;
-            background: linear-gradient(165deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.02));
-            border: none; border-radius: 18px;
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            box-shadow: 0 16px 44px rgba(0, 0, 0, 0.32);
+            position: fixed; left: 0; top: 50%; transform: translateY(-50%); z-index: 40;
+            width: 210px; padding: 34px 0;      /* 隐形的悬停区域，无整体边框 */
+            background: transparent; border: none;
         }
-        .prize-dock-title { font-size: 11px; color: var(--text-faint); letter-spacing: 2px; text-align: center; margin-bottom: 2px; }
+        .prize-dock-handle {
+            position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+            writing-mode: vertical-rl;
+            padding: 16px 8px; border-radius: 0 14px 14px 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
+            color: var(--text-soft); font-size: 11px; letter-spacing: 4px;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            cursor: default; user-select: none;
+            transition: color 0.25s, background 0.25s;
+        }
+        #prize-dock:hover .prize-dock-handle { color: var(--primary); background: linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.1)); }
+        .prize-dock-title {
+            padding-left: 34px; text-align: left;
+            font-size: 11px; color: var(--text-faint); letter-spacing: 2px; margin-bottom: 2px;
+            opacity: 0; transform: translateX(-14px); pointer-events: none;
+            transition: opacity 0.28s var(--ease), transform 0.28s var(--ease);
+        }
+        #prize-dock-list {
+            padding-left: 34px;
+            display: flex; flex-direction: column; gap: 8px;
+            opacity: 0; transform: translateX(-14px); pointer-events: none;
+            transition: opacity 0.28s var(--ease), transform 0.28s var(--ease);
+        }
+        #prize-dock:hover .prize-dock-title,
+        #prize-dock:focus-within .prize-dock-title,
+        #prize-dock:hover #prize-dock-list,
+        #prize-dock:focus-within #prize-dock-list {
+            opacity: 1; transform: translateX(0); pointer-events: auto;
+        }
         .prize-chip {
             display: flex; align-items: center; justify-content: space-between; gap: 8px;
             padding: 9px 12px; border-radius: 12px; cursor: pointer;
@@ -968,8 +992,9 @@
     <button class="float-btn" id="fullscreen-btn" aria-label="全屏">⛶</button>
 </div>
 
-<!-- 左侧奖项列表（桌面） -->
+<!-- 左侧奖项列表（桌面，悬停左侧区域展开） -->
 <div id="prize-dock" aria-label="奖项列表">
+    <div class="prize-dock-handle" aria-hidden="true">奖项</div>
     <div class="prize-dock-title">🎁 本场奖项</div>
     <div id="prize-dock-list"></div>
 </div>
