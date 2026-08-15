@@ -3,833 +3,809 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎊 至尊抽奖系统</title>
+    <title>🍀 幸运时刻 · Lucky Moment</title>
     <style>
-                :root {
+        :root {
             --primary: #ffd700;
             --primary-dark: #b8860b;
-            --box-bg: rgba(255,255,255,0.08);
-            --box-w: 720px; --box-h: 260px;
-            --btn-w: 220px; --btn-h: 64px;
-            --list-show: block;
-            --theme-glow: rgba(255,215,0,0.3);
+            --glow: rgba(255,215,0,0.3);
+            --bg1: #0f0c29; --bg2: #302b63; --bg3: #24243e;
+            --particle: 255,215,0;
+            --glass: rgba(255,255,255,0.06);
+            --glass-border: rgba(255,255,255,0.1);
+            --text: rgba(255,255,255,0.9);
+            --text-dim: rgba(255,255,255,0.5);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html {
-            width: 100%; height: 100%; overflow: hidden;
-            font-family: 'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;
+        body, html { width: 100%; height: 100%; overflow: hidden; font-family: 'PingFang SC','Microsoft YaHei',sans-serif; }
+
+        /* ===== 背景 ===== */
+        #bg { position: fixed; inset: 0; z-index: 0; background: linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3)); transition: background 0.8s; }
+        #bg-canvas { position: fixed; inset: 0; z-index: 1; }
+        #bg-glow { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+            background: radial-gradient(ellipse at 30% 20%, var(--glow), transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, var(--glow), transparent 50%);
+            transition: background 0.8s; }
+
+        /* ===== 顶部导航栏 ===== */
+        #navbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 24px;
+            background: rgba(0,0,0,0.2); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        #navbar .brand { display: flex; align-items: center; gap: 10px; }
+        #navbar .brand .logo { font-size: 24px; }
+        #navbar .brand .name { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: 2px; }
+        #navbar .brand .name span { color: var(--primary); }
+        #navbar .actions { display: flex; gap: 8px; }
+        .nav-btn {
+            width: 36px; height: 36px; border: 1px solid var(--glass-border);
+            background: var(--glass); border-radius: 10px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; color: var(--text); transition: all 0.2s;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.15); transform: scale(1.05); }
+
+        /* ===== 主内容区 ===== */
+        #main {
+            position: relative; z-index: 2; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 70px 20px 20px;
         }
 
-        /* ===== 背景层 ===== */
-        #bg-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 0;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            transition: background 0.8s ease;
-        }
-        #bg-canvas {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; display: block;
-        }
-        /* 装饰光晕 */
-        #bg-ornament {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; pointer-events: none;
-            background: radial-gradient(circle at 30% 20%, var(--theme-glow), transparent 50%),
-                        radial-gradient(circle at 70% 80%, var(--theme-glow), transparent 50%);
-            transition: background 0.8s ease;
-        }
-
-        #frontend {
-            position: relative; width: 100%; height: 100%;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            z-index: 2; padding: 20px;
-        }
-
-        #title-container { text-align: center; margin-bottom: 20px; animation: fadeInDown 1s ease-out; }
-                #main-title {
-            font-size: 64px; font-weight: 900;
+        /* 标题区 */
+        #hero { text-align: center; margin-bottom: 24px; animation: fadeUp 0.8s ease-out; }
+        #hero h1 {
+            font-size: 56px; font-weight: 900; letter-spacing: 6px;
             color: var(--primary);
-            text-shadow: 0 0 30px var(--theme-glow), 0 4px 20px rgba(0,0,0,0.5);
-            letter-spacing: 8px;
             background: linear-gradient(180deg, #fff, var(--primary), var(--primary));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-            transition: all 0.5s ease;
+            text-shadow: 0 0 40px var(--glow);
         }
-        #sub-title { color: rgba(255,255,255,0.6); margin-top: 8px; font-size: 18px; letter-spacing: 6px; font-weight: 300; }
-        #remaining-info { color: rgba(255,255,255,0.5); font-size: 13px; margin-bottom: 15px; letter-spacing: 2px; }
-        #remaining-info span { color: var(--primary); font-weight: bold; font-size: 16px; }
+        #hero p { color: var(--text-dim); font-size: 16px; letter-spacing: 4px; margin-top: 6px; font-weight: 300; }
 
+        /* 状态栏 */
+        #status-bar {
+            display: flex; gap: 24px; margin-bottom: 20px;
+            font-size: 13px; color: var(--text-dim); letter-spacing: 1px;
+        }
+        #status-bar .stat { display: flex; align-items: center; gap: 6px; }
+        #status-bar .stat b { color: var(--primary); font-size: 18px; font-weight: 800; }
+
+        /* 抽奖盒 */
         #lottery-box {
-            width: var(--box-w); height: var(--box-h);
-            border: 2px solid rgba(255,215,0,0.3);
-            background: var(--box-bg);
-            border-radius: 24px;
+            width: min(720px, 90vw); height: 240px;
+            border: 2px solid rgba(255,215,0,0.25);
+            background: var(--glass);
+            border-radius: 20px;
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             display: flex; align-items: center; justify-content: center;
-            overflow: hidden; margin-bottom: 30px; position: relative;
-            box-shadow: 0 0 40px var(--theme-glow), inset 0 0 60px rgba(255,215,0,0.05);
-            transition: all 0.3s ease;
+            position: relative; overflow: hidden;
+            box-shadow: 0 0 50px var(--glow), inset 0 0 40px rgba(255,215,0,0.03);
+            transition: all 0.4s;
+            margin-bottom: 28px;
         }
         #lottery-box::before {
-            content: ''; position: absolute;
-            top: -2px; left: -2px; right: -2px; bottom: -2px;
-            border-radius: 26px;
-            background: linear-gradient(45deg,transparent,var(--primary),transparent,var(--primary),transparent);
-            background-size: 200% 200%; z-index: -1;
-            animation: borderGlow 3s linear infinite;
+            content: ''; position: absolute; inset: -2px; border-radius: 22px; z-index: -1;
+            background: linear-gradient(45deg, transparent, var(--primary), transparent, var(--primary), transparent);
+            background-size: 300% 300%; animation: borderFlow 4s linear infinite;
         }
-        @keyframes borderGlow { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
-        #lottery-box.winner-active {
-            box-shadow: 0 0 80px var(--theme-glow), inset 0 0 60px rgba(255,215,0,0.1);
-            border-color: var(--primary);
-        }
+        @keyframes borderFlow { 0%{background-position:0% 50%} 100%{background-position:300% 50%} }
+        #lottery-box.winner { box-shadow: 0 0 100px var(--glow); border-color: var(--primary); }
 
-        .slot-container { display: flex; justify-content: center; align-items: center; gap: 20px; width: 100%; padding: 0 30px; }
-        .name-slot {
-            flex: 1; text-align: center; color: rgba(255,255,255,0.9); font-size: 3rem;
-            font-weight: 700; text-shadow: 0 0 20px rgba(0,0,0,0.5);
-            padding: 10px; min-height: 80px; display: flex; align-items: center; justify-content: center;
+        .slots { display: flex; gap: 16px; width: 100%; padding: 0 24px; justify-content: center; }
+        .slot {
+            flex: 1; max-width: 300px; text-align: center;
+            font-size: 2.8rem; font-weight: 800; color: var(--text);
+            min-height: 70px; display: flex; align-items: center; justify-content: center;
             border-radius: 12px; position: relative;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
-        .name-slot:not(:last-child)::after {
-            content: ''; position: absolute; right: -10px; top: 20%; height: 60%;
-            width: 1px; background: rgba(255,255,255,0.1);
+        .slot:not(:last-child)::after {
+            content: ''; position: absolute; right: -8px; top: 15%; height: 70%;
+            width: 1px; background: var(--glass-border);
         }
-        .rolling-text { color: rgba(255,255,255,0.7); animation: textFlicker 0.08s infinite; }
-        @keyframes textFlicker { 0%,100%{opacity:0.7;transform:scale(1)} 50%{opacity:1;transform:scale(1.02)} }
-        .winner-text {
+        .slot.rolling { color: rgba(255,255,255,0.6); animation: flicker 0.1s infinite; }
+        @keyframes flicker { 0%,100%{opacity:0.6} 50%{opacity:1} }
+        .slot.winner {
             color: var(--primary);
-            text-shadow: 0 0 20px var(--theme-glow), 0 0 40px var(--theme-glow);
-            animation: winPop 0.6s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
+            text-shadow: 0 0 20px var(--glow), 0 0 40px var(--glow);
+            animation: pop 0.6s cubic-bezier(0.175,0.885,0.32,1.275);
         }
-        @keyframes winPop { 0%{transform:scale(0.3);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
+        @keyframes pop { 0%{transform:scale(0.3);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
 
+        /* 抽奖按钮 */
         #draw-btn {
-            width: var(--btn-w); height: var(--btn-h); border: none;
-            background: linear-gradient(135deg,var(--primary),var(--primary-dark));
-            color: #1a1a2e; border-radius: 50px; cursor: pointer;
-            font-size: 1.3rem; font-weight: 800; display: flex;
-            align-items: center; justify-content: center; gap: 12px;
-            letter-spacing: 3px; position: relative; overflow: hidden;
-            box-shadow: 0 8px 32px var(--theme-glow);
-            transition: all 0.3s ease;
+            width: 200px; height: 60px; border: none; border-radius: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #1a1a2e; font-size: 1.2rem; font-weight: 800;
+            letter-spacing: 3px; cursor: pointer; position: relative; overflow: hidden;
+            box-shadow: 0 8px 30px var(--glow); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
         }
-        #draw-btn::before {
+        #draw-btn::after {
             content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: linear-gradient(45deg,transparent,rgba(255,255,255,0.2),transparent);
-            transform: rotate(45deg); animation: btnShine 3s ease-in-out infinite;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.15), transparent);
+            transform: rotate(45deg); animation: shine 3s ease-in-out infinite;
         }
-        @keyframes btnShine { 0%{transform:translateX(-100%) rotate(45deg)} 100%{transform:translateX(100%) rotate(45deg)} }
-        #draw-btn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 12px 40px var(--theme-glow); }
-        #draw-btn:active { transform: translateY(0) scale(0.98); }
+        @keyframes shine { 0%{transform:translateX(-100%) rotate(45deg)} 100%{transform:translateX(100%) rotate(45deg)} }
+        #draw-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 40px var(--glow); }
+        #draw-btn:active { transform: scale(0.97); }
         #draw-btn.rolling {
-            background: linear-gradient(135deg,#ff6b6b,#ee5a24);
-            box-shadow: 0 8px 32px rgba(255,107,107,0.4);
-            animation: btnPulse 1s ease-in-out infinite;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            box-shadow: 0 8px 30px rgba(255,107,107,0.4);
+            animation: pulse 1s ease-in-out infinite;
         }
-        @keyframes btnPulse { 0%,100%{box-shadow:0 8px 32px rgba(255,107,107,0.4)} 50%{box-shadow:0 8px 48px rgba(255,107,107,0.7)} }
+        @keyframes pulse { 0%,100%{box-shadow:0 8px 30px rgba(255,107,107,0.4)} 50%{box-shadow:0 8px 50px rgba(255,107,107,0.7)} }
 
-        #round-history {
-            margin-top: 20px; width: 70%; max-height: 120px; overflow-y: auto;
-            display: var(--list-show); scrollbar-width: none;
+        /* 中奖记录 */
+        #history {
+            margin-top: 20px; width: min(600px, 85vw); max-height: 100px;
+            overflow-y: auto; scrollbar-width: none;
         }
-        .history-item {
-            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,215,0,0.1);
-            margin-bottom: 4px; padding: 6px 16px; border-radius: 8px;
-            font-size: 13px; color: rgba(255,255,255,0.7); text-align: center;
-            animation: fadeIn 0.5s; backdrop-filter: blur(10px);
+        #history::-webkit-scrollbar { display: none; }
+        .h-item {
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: 6px 16px; border-radius: 8px; margin-bottom: 4px;
+            font-size: 13px; color: var(--text-dim); text-align: center;
+            animation: fadeUp 0.4s; backdrop-filter: blur(10px);
         }
-        .history-item .round-label { color: var(--primary); font-weight: 600; }
+        .h-item b { color: var(--primary); }
 
-        .confetti-piece {
-            position: fixed; width: 10px; height: 10px; z-index: 100;
-            pointer-events: none;
-            animation: confettiFall var(--fall-duration,3s) ease-out forwards;
-        }
-        @keyframes confettiFall { 0%{transform:translateY(-10vh)rotate(0deg)scale(1);opacity:1} 100%{transform:translateY(110vh)rotate(720deg)scale(0.3);opacity:0} }
+        /* 纸屑 */
+        .confetti { position: fixed; z-index: 100; pointer-events: none; animation: fall var(--dur,3s) ease-out forwards; }
+        @keyframes fall { 0%{transform:translateY(-10vh) rotate(0) scale(1);opacity:1} 100%{transform:translateY(110vh) rotate(720deg) scale(0.3);opacity:0} }
 
-                #backend-icon {
-            position: fixed; bottom: 24px; left: 24px; width: 48px; height: 48px;
-            background: rgba(255,255,255,0.1); backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.15); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px; cursor: pointer; z-index: 1000;
-            transition: all 0.3s ease;
+        /* ===== 设置弹窗 ===== */
+        #settings-overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            animation: fadeIn 0.3s;
         }
-        #backend-icon:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
-        #fullscreen-icon {
-            position: fixed; bottom: 24px; left: 84px; width: 48px; height: 48px;
-            background: rgba(255,255,255,0.1); backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.15); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; cursor: pointer; z-index: 1000;
-            transition: all 0.3s ease;
+        #settings-overlay.open { display: flex; }
+        #settings-modal {
+            width: min(520px, 92vw); max-height: 85vh;
+            background: rgba(15,15,30,0.97); backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border); border-radius: 20px;
+            overflow: hidden; display: flex; flex-direction: column;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+            animation: scaleIn 0.3s ease-out;
         }
-        #fullscreen-icon:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
+        @keyframes scaleIn { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
 
-        #backend-panel {
-            position: fixed; bottom: 80px; left: 24px; width: 420px; max-height: 75vh;
-            background: rgba(20,20,40,0.95); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px 24px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6); z-index: 999;
-            display: none; flex-direction: column; overflow-y: auto; color: #eee;
+        #settings-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; border-bottom: 1px solid var(--glass-border);
         }
-        #backend-panel::-webkit-scrollbar { width: 4px; }
-        #backend-panel::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.3); border-radius: 2px; }
-        .setting-group { margin-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 14px; }
-        .setting-group:last-child { border-bottom: none; margin-bottom: 0; }
-        .setting-group h3 { margin: 0 0 10px 0; font-size: 13px; color: var(--primary); font-weight: 600; letter-spacing: 1px; }
-        .setting-group label { display: block; font-size: 11px; margin-bottom: 4px; font-weight: 500; color: rgba(255,255,255,0.5); }
-        .setting-group input,.setting-group select,.setting-group textarea {
-            width: 100%; padding: 8px 10px; margin-bottom: 8px;
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
-            background: rgba(255,255,255,0.06); color: #eee; font-size: 12px; outline: none;
+        #settings-header h2 { font-size: 16px; color: var(--text); font-weight: 700; }
+        #settings-close {
+            width: 32px; height: 32px; border: none; background: var(--glass);
+            border-radius: 8px; cursor: pointer; font-size: 16px; color: var(--text-dim);
+            display: flex; align-items: center; justify-content: center; transition: all 0.2s;
         }
-        .setting-group input:focus,.setting-group select:focus,.setting-group textarea:focus {
-            border-color: rgba(255,215,0,0.4); background: rgba(255,255,255,0.1);
+        #settings-close:hover { background: rgba(255,100,100,0.2); color: #ff6b6b; }
+
+        /* 设置 Tab */
+        #settings-tabs {
+            display: flex; border-bottom: 1px solid var(--glass-border);
+            padding: 0 12px; overflow-x: auto; scrollbar-width: none;
         }
-        .setting-group select option { background: #1a1a2e; color: #eee; }
-        .hint { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: -6px; margin-bottom: 8px; display: block; }
-        .flex-row { display: flex; gap: 8px; }
-        .action-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; }
-        .action-btn:hover { transform: translateY(-1px); opacity: 0.9; }
+        #settings-tabs::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            padding: 10px 14px; border: none; background: none;
+            color: var(--text-dim); font-size: 12px; cursor: pointer;
+            border-bottom: 2px solid transparent; transition: all 0.2s;
+            white-space: nowrap; font-weight: 500;
+        }
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        #settings-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        .field { margin-bottom: 14px; }
+        .field label { display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 4px; font-weight: 500; }
+        .field input, .field select, .field textarea {
+            width: 100%; padding: 8px 10px; border: 1px solid var(--glass-border);
+            border-radius: 8px; background: var(--glass); color: var(--text);
+            font-size: 12px; outline: none; transition: border-color 0.2s;
+        }
+        .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--primary); }
+        .field select option { background: #1a1a2e; }
+        .field .hint { font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 3px; }
+        .field-row { display: flex; gap: 8px; }
+        .field-row > * { flex: 1; }
+
+        /* 主题网格 */
+        .theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .theme-card {
+            height: 52px; border-radius: 10px; cursor: pointer;
+            border: 2px solid transparent; position: relative; overflow: hidden;
+            transition: all 0.2s;
+        }
+        .theme-card:hover { transform: scale(1.05); }
+        .theme-card.active { border-color: var(--primary); box-shadow: 0 0 12px var(--glow); }
+        .theme-card .t-name {
+            position: absolute; bottom: 3px; left: 0; right: 0;
+            text-align: center; font-size: 8px; color: white;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-weight: 600;
+        }
+
+        .btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; }
+        .btn:hover { transform: translateY(-1px); opacity: 0.9; }
+        .btn-gold { background: linear-gradient(135deg, #ffd700, #b8860b); color: #1a1a2e; }
         .btn-green { background: #2d8a4e; color: white; }
         .btn-red { background: #c0392b; color: white; }
-        .btn-blue { background: #2c6fbb; color: white; }
-        .btn-gold { background: linear-gradient(135deg,#ffd700,#b8860b); color: #1a1a2e; font-weight: 700; }
-        #save-status { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 8px; }
-        #audio-status { position: fixed; bottom: 80px; right: 20px; font-size: 12px; color: rgba(255,255,255,0.4); z-index: 100; background: rgba(0,0,0,0.4); padding: 6px 14px; border-radius: 20px; backdrop-filter: blur(10px); display: none; }
+        .btn-ghost { background: var(--glass); color: var(--text); border: 1px solid var(--glass-border); }
 
-        .theme-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 8px; }
-        .theme-option { height: 56px; border-radius: 10px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; position: relative; overflow: hidden; }
-        .theme-option:hover { transform: scale(1.05); }
-        .theme-option.active { border-color: #ffd700; box-shadow: 0 0 12px rgba(255,215,0,0.4); }
-        .theme-option .label { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-size: 8px; color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.8); font-weight: 600; letter-spacing: 0.5px; }
+        #save-msg { font-size: 11px; color: var(--text-dim); margin-top: 10px; text-align: center; }
 
-        @keyframes fadeInDown { from{opacity:0;transform:translateY(-30px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        /* 快捷键提示 */
+        #shortcut-hint {
+            position: fixed; bottom: 16px; right: 16px; z-index: 10;
+            font-size: 11px; color: rgba(255,255,255,0.25);
+            background: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        #shortcut-hint kbd {
+            background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 3px;
+            font-family: monospace; font-size: 10px;
+        }
 
-        @media (max-width:768px) {
-            :root { --box-w:90vw; --box-h:200px; --btn-w:180px; --btn-h:54px; }
-            #main-title { font-size: 36px; letter-spacing: 4px; }
-            #sub-title { font-size: 14px; }
-            .name-slot { font-size: 2rem; }
-            #backend-panel { width: 90vw; left: 5vw; bottom: 70px; }
+        /* 音频状态 */
+        #audio-toast {
+            position: fixed; top: 60px; right: 20px; z-index: 100;
+            background: rgba(0,0,0,0.6); color: var(--text); padding: 8px 16px;
+            border-radius: 10px; font-size: 12px; backdrop-filter: blur(10px);
+            display: none; animation: fadeUp 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            #hero h1 { font-size: 32px; letter-spacing: 3px; }
+            #hero p { font-size: 13px; }
+            #lottery-box { height: 180px; }
+            .slot { font-size: 1.8rem; }
+            #draw-btn { width: 160px; height: 50px; font-size: 1rem; }
+            #settings-modal { width: 95vw; max-height: 90vh; }
+            .theme-grid { grid-template-columns: repeat(3, 1fr); }
+            #shortcut-hint { display: none; }
+            #navbar { padding: 10px 16px; }
         }
     </style>
 </head>
 <body>
 
-<div id="bg-layer"></div>
+<div id="bg"></div>
 <canvas id="bg-canvas"></canvas>
-<div id="bg-ornament"></div>
-<div id="audio-status">🔊 音效已激活</div>
+<div id="bg-glow"></div>
+<div id="audio-toast">🔊 音效已激活</div>
 
-<div id="frontend">
-    <div id="title-container">
-        <h1 id="main-title">🎊 年度盛典大抽奖</h1>
-        <div id="sub-title">✦ 让好运在这一刻发生 ✦</div>
+<!-- 顶部导航 -->
+<nav id="navbar">
+    <div class="brand">
+        <span class="logo">🍀</span>
+        <span class="name">幸运<span>时刻</span></span>
     </div>
-    <div id="remaining-info">剩余可抽人数 · <span id="remain-count">0</span> 人</div>
-    <div id="lottery-box"><div class="slot-container" id="slot-container"></div></div>
+    <div class="actions">
+        <button class="nav-btn" onclick="toggleFullscreen()" title="全屏 (F)">⛶</button>
+        <button class="nav-btn" onclick="openSettings()" title="设置">⚙️</button>
+    </div>
+</nav>
+
+<!-- 主内容 -->
+<div id="main">
+    <div id="hero">
+        <h1 id="title">🎊 年度盛典大抽奖</h1>
+        <p id="subtitle">✦ 让好运在这一刻发生 ✦</p>
+    </div>
+
+    <div id="status-bar">
+        <div class="stat">剩余 <b id="remain">0</b> 人</div>
+        <div class="stat">已抽 <b id="rounds">0</b> 轮</div>
+    </div>
+
+    <div id="lottery-box">
+        <div class="slots" id="slots"></div>
+    </div>
+
     <button id="draw-btn" onclick="toggleDraw()">
-        <span id="cfg-btn-icon-disp">🎁</span>
-        <span id="draw-btn-text">开始抽奖</span>
+        <span id="btn-icon">🎁</span>
+        <span id="btn-text">开始抽奖</span>
     </button>
-    <div id="round-history"></div>
+
+    <div id="history"></div>
 </div>
 
-<div id="backend-icon" onclick="togglePanel()">⚙️</div>
-<div id="fullscreen-icon" onclick="toggleFullscreen()" title="全屏 (F)">⛶</div>
+<!-- 快捷键提示 -->
+<div id="shortcut-hint">
+    <kbd>空格</kbd> 抽奖 &nbsp; <kbd>F</kbd> 全屏 &nbsp; <kbd>Esc</kbd> 关闭
+</div>
 
-<div id="backend-panel">
-    <div class="setting-group">
-        <h3>🎨 1. 主题风格</h3>
-        <label>点击切换（粒子、光晕、主色同步变化）</label>
-        <div class="theme-grid" id="theme-grid"></div>
-    </div>
-    <div class="setting-group">
-        <h3>📌 2. 标题设置</h3>
-        <label>主标题</label><input type="text" id="in-m-title" value="🎊 年度盛典大抽奖" oninput="liveUpdate()">
-        <label>副标题</label><input type="text" id="in-s-title" value="✦ 让好运在这一刻发生 ✦" oninput="liveUpdate()">
-        <label>标题大小</label><input type="number" id="in-m-size" value="64" oninput="liveUpdate()">
-    </div>
-    <div class="setting-group">
-        <h3>🎵 3. 音效配置</h3>
-        <label>抽奖音效音量</label><input type="range" id="in-vol-roll" min="0" max="1" step="0.1" value="0.6">
-        <label>中奖音效音量</label><input type="range" id="in-vol-win" min="0" max="1" step="0.1" value="0.8">
-        <label>纸屑特效</label>
-        <select id="in-confetti"><option value="on">开启 🎉</option><option value="off">关闭</option></select>
-        <span class="hint">点击抽奖即激活音效，内置喜庆鼓乐+胜利号角，无需外部文件</span>
-    </div>
-    <div class="setting-group">
-        <h3>📐 4. 样式</h3>
-        <div class="flex-row">
-            <input type="number" id="in-box-w" value="720" oninput="liveUpdate()" placeholder="宽">
-            <input type="number" id="in-box-h" value="260" oninput="liveUpdate()" placeholder="高">
+<!-- 设置弹窗 -->
+<div id="settings-overlay" onclick="if(event.target===this)closeSettings()">
+    <div id="settings-modal">
+        <div id="settings-header">
+            <h2>⚙️ 设置</h2>
+            <button id="settings-close" onclick="closeSettings()">✕</button>
         </div>
-        <label>按钮图标</label>
-        <select id="in-btn-icon" onchange="liveUpdate()">
-            <option value="🎁">🎁 礼物</option><option value="🔥">🔥 火热</option><option value="⭐">⭐ 星星</option>
-            <option value="🏆">🏆 奖杯</option><option value="💎">💎 钻石</option><option value="🧧">🧧 红包</option>
-        </select>
-        <label>中奖名单</label>
-        <select id="in-list-show" onchange="liveUpdate()">
-            <option value="block">显示</option><option value="none">隐藏</option>
-        </select>
-    </div>
-    <div class="setting-group">
-        <h3>📋 5. 名单与抽奖</h3>
-        <label>同时抽奖人数</label><input type="number" id="in-draw-count" value="1" min="1" max="10" oninput="initSlots()">
-        <label>名单（逗号隔开）</label>
-        <textarea id="in-names" rows="3">陈明,王强,李芳,张伟,赵敏,孙杰,周涛,吴磊,郑洁,冯平,褚卫,卫华,蒋云,沈霞,韩梅,杨立,朱勇,秦丽,尤文,许博</textarea>
-                <div class="flex-row">
-            <button class="action-btn btn-green" onclick="applyNames()">✓ 应用名单</button>
-            <button class="action-btn btn-red" onclick="resetLottery()">⟳ 重置抽奖</button>
+        <div id="settings-tabs">
+            <button class="tab-btn active" data-tab="theme">🎨 主题</button>
+            <button class="tab-btn" data-tab="title">📌 标题</button>
+            <button class="tab-btn" data-tab="sound">🎵 音效</button>
+            <button class="tab-btn" data-tab="names">📋 名单</button>
+            <button class="tab-btn" data-tab="records">📜 记录</button>
+            <button class="tab-btn" data-tab="storage">💾 存储</button>
         </div>
-        <span class="hint">「应用名单」仅更新名单，不清空中奖记录；「重置抽奖」清空所有中奖记录</span>
-    </div>
-    <div class="setting-group">
-        <h3>📜 6. 记录管理</h3>
-        <div id="backend-record-list" style="font-size:11px;background:rgba(0,0,0,0.2);padding:8px;border-radius:6px;max-height:60px;overflow-y:auto;color:rgba(255,255,255,0.6);">无记录</div>
-        <div class="flex-row" style="margin-top:8px;"><button class="action-btn btn-red" onclick="resetLottery()">⟳ 全系统重置</button></div>
-    </div>
-    <div class="setting-group">
-        <h3>💾 7. 持久化存储</h3>
-        <div class="flex-row">
-            <button class="action-btn btn-gold" onclick="saveSettings()">💾 保存</button>
-            <button class="action-btn" style="background:rgba(255,255,255,0.1);color:#eee;" onclick="clearSettings()">🗑️ 清除</button>
+        <div id="settings-body">
+            <!-- 主题 -->
+            <div class="tab-panel active" id="tab-theme">
+                <div class="field">
+                    <label>选择主题风格</label>
+                    <div class="theme-grid" id="theme-grid"></div>
+                </div>
+            </div>
+            <!-- 标题 -->
+            <div class="tab-panel" id="tab-title">
+                <div class="field"><label>主标题</label><input type="text" id="in-title" value="🎊 年度盛典大抽奖" oninput="liveUpdate()"></div>
+                <div class="field"><label>副标题</label><input type="text" id="in-subtitle" value="✦ 让好运在这一刻发生 ✦" oninput="liveUpdate()"></div>
+                <div class="field"><label>标题大小</label><input type="number" id="in-size" value="56" oninput="liveUpdate()"></div>
+                <div class="field"><label>按钮图标</label>
+                    <select id="in-icon" onchange="liveUpdate()">
+                        <option value="🎁">🎁 礼物</option><option value="🔥">🔥 火热</option>
+                        <option value="⭐">⭐ 星星</option><option value="🏆">🏆 奖杯</option>
+                        <option value="💎">💎 钻石</option><option value="🧧">🧧 红包</option>
+                    </select>
+                </div>
+            </div>
+            <!-- 音效 -->
+            <div class="tab-panel" id="tab-sound">
+                <div class="field"><label>抽奖音效音量</label><input type="range" id="in-vol-roll" min="0" max="1" step="0.1" value="0.6"></div>
+                <div class="field"><label>中奖音效音量</label><input type="range" id="in-vol-win" min="0" max="1" step="0.1" value="0.8"></div>
+                <div class="field"><label>纸屑特效</label>
+                    <select id="in-confetti"><option value="on">开启 🎉</option><option value="off">关闭</option></select>
+                </div>
+                <div class="field"><div class="hint">点击抽奖自动激活音效，内置喜庆鼓乐+胜利号角+鞭炮声</div></div>
+            </div>
+            <!-- 名单 -->
+            <div class="tab-panel" id="tab-names">
+                <div class="field"><label>同时抽奖人数</label><input type="number" id="in-count" value="1" min="1" max="10" oninput="initSlots()"></div>
+                <div class="field"><label>名单（逗号或换行隔开）</label>
+                    <textarea id="in-names" rows="5">陈明,王强,李芳,张伟,赵敏,孙杰,周涛,吴磊,郑洁,冯平,褚卫,卫华,蒋云,沈霞,韩梅,杨立,朱勇,秦丽,尤文,许博</textarea>
+                </div>
+                <div class="field-row">
+                    <button class="btn btn-green" onclick="applyNames()">✓ 应用名单</button>
+                </div>
+                <div class="field"><div class="hint">应用名单不会清除已有中奖记录，已中奖者自动排除</div></div>
+            </div>
+            <!-- 记录 -->
+            <div class="tab-panel" id="tab-records">
+                <div class="field"><label>中奖记录</label>
+                    <div id="record-list" style="font-size:12px;background:var(--glass);padding:10px;border-radius:8px;max-height:120px;overflow-y:auto;color:var(--text-dim);">暂无记录</div>
+                </div>
+                <div class="field-row">
+                    <button class="btn btn-ghost" onclick="exportWinners()">📤 导出名单</button>
+                    <button class="btn btn-red" onclick="resetAll()">⟳ 全部重置</button>
+                </div>
+            </div>
+            <!-- 存储 -->
+            <div class="tab-panel" id="tab-storage">
+                <div class="field-row">
+                    <button class="btn btn-gold" onclick="saveSettings()">💾 保存设置</button>
+                    <button class="btn btn-ghost" onclick="clearSettings()">🗑️ 清除</button>
+                </div>
+                <div id="save-msg">设置保存在浏览器中，关闭后自动恢复</div>
+            </div>
         </div>
-        <span id="save-status">关闭后自动恢复</span>
     </div>
 </div>
 
 <script>
-    // ========== 主题配置 ==========
+    // ========== 主题 ==========
     const THEMES = [
-        { id:'chinese-red',   name:'🏮 中国风',   bg1:'#1a0505', bg2:'#4a0a0a', bg3:'#2a0505', primary:'#ff2222', glow:'rgba(255,34,34,0.3)', count:100, color:'255,50,50' },
-        { id:'golden-gala',   name:'🥇 年会金',   bg1:'#1a1200', bg2:'#3a2a00', bg3:'#2a1a00', primary:'#ffd700', glow:'rgba(255,215,0,0.35)', count:120, color:'255,215,0' },
-        { id:'beauty-pink',   name:'💄 美妆风',   bg1:'#1a0510', bg2:'#3a1025', bg3:'#2a0818', primary:'#ff69b4', glow:'rgba(255,105,180,0.3)', count:130, color:'255,105,180' },
-        { id:'spring-fest',   name:'🧧 新春',     bg1:'#0a0a00', bg2:'#3a0a00', bg3:'#1a0500', primary:'#ff4400', glow:'rgba(255,68,0,0.3)', count:110, color:'255,68,0' },
-        { id:'royal-purple',  name:'👑 紫金',     bg1:'#0a0015', bg2:'#2a0040', bg3:'#1a0020', primary:'#b388ff', glow:'rgba(179,136,255,0.3)', count:120, color:'179,136,255' },
-        { id:'luxury-black',  name:'🖤 黑金奢华', bg1:'#0a0a0a', bg2:'#1a1a0a', bg3:'#0a0a0a', primary:'#ffd700', glow:'rgba(255,215,0,0.3)', count:90, color:'255,215,0' },
-        { id:'aurora',        name:'🌌 极光',     bg1:'#0a1628', bg2:'#1a3a3a', bg3:'#0d2818', primary:'#00ff88', glow:'rgba(0,255,136,0.3)', count:100, color:'0,255,136' },
-        { id:'sunset',        name:'🌅 落日余晖', bg1:'#1a0a0a', bg2:'#4a1a0a', bg3:'#2a0a0a', primary:'#ff6b35', glow:'rgba(255,107,53,0.3)', count:110, color:'255,107,53' },
-        { id:'ocean',         name:'🌊 深海蓝',   bg1:'#0a1628', bg2:'#0a2a4a', bg3:'#0a1a2a', primary:'#00bfff', glow:'rgba(0,191,255,0.3)', count:100, color:'0,191,255' },
-        { id:'cyberpunk',     name:'⚡ 赛博朋克', bg1:'#0a0015', bg2:'#1a0030', bg3:'#0a0020', primary:'#ff00ff', glow:'rgba(255,0,255,0.3)', count:140, color:'255,0,255' },
-        { id:'forest',        name:'🌲 森林秘境', bg1:'#0a1a0a', bg2:'#1a2a0a', bg3:'#0a1a0a', primary:'#7ec850', glow:'rgba(126,200,80,0.3)', count:90, color:'126,200,80' },
-        { id:'sakura',        name:'🌸 樱花',     bg1:'#1a0a1a', bg2:'#3a1a2a', bg3:'#2a0a1a', primary:'#ff6b9d', glow:'rgba(255,107,157,0.3)', count:130, color:'255,107,157' },
+        { id:'chinese',   name:'🏮 中国风',   bg1:'#1a0505', bg2:'#4a0a0a', bg3:'#2a0505', primary:'#ff2222', glow:'rgba(255,34,34,0.3)',  p:'255,50,50',   count:100 },
+        { id:'gala',      name:'🥇 年会金',   bg1:'#1a1200', bg2:'#3a2a00', bg3:'#2a1a00', primary:'#ffd700', glow:'rgba(255,215,0,0.35)', p:'255,215,0',   count:120 },
+        { id:'beauty',    name:'💄 美妆风',   bg1:'#1a0510', bg2:'#3a1025', bg3:'#2a0818', primary:'#ff69b4', glow:'rgba(255,105,180,0.3)',p:'255,105,180', count:130 },
+        { id:'spring',    name:'🧧 新春',     bg1:'#0a0a00', bg2:'#3a0a00', bg3:'#1a0500', primary:'#ff4400', glow:'rgba(255,68,0,0.3)',   p:'255,68,0',    count:110 },
+        { id:'royal',     name:'👑 紫金',     bg1:'#0a0015', bg2:'#2a0040', bg3:'#1a0020', primary:'#b388ff', glow:'rgba(179,136,255,0.3)',p:'179,136,255', count:120 },
+        { id:'luxury',    name:'🖤 黑金',     bg1:'#0a0a0a', bg2:'#1a1a0a', bg3:'#0a0a0a', primary:'#ffd700', glow:'rgba(255,215,0,0.3)',  p:'255,215,0',   count:90 },
+        { id:'aurora',    name:'🌌 极光',     bg1:'#0a1628', bg2:'#1a3a3a', bg3:'#0d2818', primary:'#00ff88', glow:'rgba(0,255,136,0.3)',  p:'0,255,136',   count:100 },
+        { id:'sunset',    name:'🌅 落日',     bg1:'#1a0a0a', bg2:'#4a1a0a', bg3:'#2a0a0a', primary:'#ff6b35', glow:'rgba(255,107,53,0.3)', p:'255,107,53',  count:110 },
+        { id:'ocean',     name:'🌊 深海',     bg1:'#0a1628', bg2:'#0a2a4a', bg3:'#0a1a2a', primary:'#00bfff', glow:'rgba(0,191,255,0.3)',  p:'0,191,255',   count:100 },
+        { id:'cyber',     name:'⚡ 赛博',     bg1:'#0a0015', bg2:'#1a0030', bg3:'#0a0020', primary:'#ff00ff', glow:'rgba(255,0,255,0.3)',  p:'255,0,255',   count:140 },
+        { id:'forest',    name:'🌲 森林',     bg1:'#0a1a0a', bg2:'#1a2a0a', bg3:'#0a1a0a', primary:'#7ec850', glow:'rgba(126,200,80,0.3)', p:'126,200,80',  count:90 },
+        { id:'sakura',    name:'🌸 樱花',     bg1:'#1a0a1a', bg2:'#3a1a2a', bg3:'#2a0a1a', primary:'#ff6b9d', glow:'rgba(255,107,157,0.3)',p:'255,107,157', count:130 },
     ];
-
-    let currentTheme = THEMES[0];
-    let themeColors = { bg1:'#1a0505', bg2:'#4a0a0a', bg3:'#2a0505', color:'255,50,50', glow:'rgba(255,34,34,0.3)' };
+    let curTheme = THEMES[0];
+    let tc = { bg1:'#1a0505', bg2:'#4a0a0a', bg3:'#2a0505', p:'255,50,50', glow:'rgba(255,34,34,0.3)' };
 
     // ========== Canvas 粒子 ==========
-    const canvas = document.getElementById('bg-canvas');
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-    let mouseX = 0, mouseY = 0;
+    const cv = document.getElementById('bg-canvas'), cx = cv.getContext('2d');
+    let pts = [], mx = 0, my = 0;
+    function resize() { cv.width = innerWidth; cv.height = innerHeight; }
+    addEventListener('resize', resize); resize();
+    addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
 
-    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-    document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
-
-    class Particle {
-        constructor() { this.reset(); }
-        reset() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.size = Math.random() * 4 + 1.5;
-            this.speedX = (Math.random() - 0.5) * 0.4;
-            this.speedY = (Math.random() - 0.5) * 0.4;
-            this.opacity = Math.random() * 0.4 + 0.15;
-            this.pColor = themeColors.color;
+    class Pt {
+        constructor() { this.init(); }
+        init() {
+            this.x = Math.random()*cv.width; this.y = Math.random()*cv.height;
+            this.s = Math.random()*3.5+1.5;
+            this.vx = (Math.random()-0.5)*0.4; this.vy = (Math.random()-0.5)*0.4;
+            this.o = Math.random()*0.35+0.15; this.c = tc.p;
         }
         update() {
-            this.x += this.speedX; this.y += this.speedY;
-            const dx = mouseX - this.x, dy = mouseY - this.y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist < 150) { this.x -= dx * 0.008; this.y -= dy * 0.008; }
-            if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+            this.x += this.vx; this.y += this.vy;
+            const dx = mx-this.x, dy = my-this.y, d = Math.sqrt(dx*dx+dy*dy);
+            if (d < 150) { this.x -= dx*0.008; this.y -= dy*0.008; }
+            if (this.x<0||this.x>cv.width||this.y<0||this.y>cv.height) this.init();
         }
         draw() {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(${this.pColor}, ${this.opacity})`;
-            ctx.fill();
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = `rgba(${this.pColor}, 0.4)`;
+            cx.beginPath(); cx.arc(this.x,this.y,this.s,0,Math.PI*2);
+            cx.fillStyle = `rgba(${this.c},${this.o})`; cx.fill();
+            cx.shadowBlur = 12; cx.shadowColor = `rgba(${this.c},0.4)`;
         }
     }
 
-    function initParticles(count) {
-        particles = [];
-        for (let i = 0; i < (count || 100); i++) particles.push(new Particle());
-    }
+    function initPts(n) { pts = []; for (let i=0;i<(n||100);i++) pts.push(new Pt()); }
 
-    function animateParticles() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        grad.addColorStop(0, themeColors.bg1);
-        grad.addColorStop(0.5, themeColors.bg2);
-        grad.addColorStop(1, themeColors.bg3);
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        // 连接线
-        for (let i = 0; i < particles.length; i++) {
-            for (let j = i + 1; j < particles.length; j++) {
-                const dx = particles[i].x - particles[j].x;
-                const dy = particles[i].y - particles[j].y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                if (dist < 130) {
-                    ctx.beginPath();
-                    ctx.moveTo(particles[i].x, particles[i].y);
-                    ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = `rgba(255,255,255,${0.03 * (1 - dist / 130)})`;
-                    ctx.stroke();
-                }
-            }
+    function draw() {
+        cx.clearRect(0,0,cv.width,cv.height);
+        const g = cx.createLinearGradient(0,0,cv.width,cv.height);
+        g.addColorStop(0,tc.bg1); g.addColorStop(0.5,tc.bg2); g.addColorStop(1,tc.bg3);
+        cx.fillStyle = g; cx.fillRect(0,0,cv.width,cv.height);
+        for (let i=0;i<pts.length;i++) for (let j=i+1;j<pts.length;j++) {
+            const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.sqrt(dx*dx+dy*dy);
+            if (d<130) { cx.beginPath(); cx.moveTo(pts[i].x,pts[i].y); cx.lineTo(pts[j].x,pts[j].y);
+                cx.strokeStyle=`rgba(255,255,255,${0.03*(1-d/130)})`; cx.stroke(); }
         }
-        particles.forEach(p => { p.update(); p.draw(); });
-        ctx.shadowBlur = 0;
-        requestAnimationFrame(animateParticles);
+        pts.forEach(p=>{p.update();p.draw();}); cx.shadowBlur=0;
+        requestAnimationFrame(draw);
     }
-    initParticles(100);
-    animateParticles();
+    initPts(100); draw();
 
-    function applyTheme(theme) {
-        currentTheme = theme;
-        themeColors = { bg1: theme.bg1, bg2: theme.bg2, bg3: theme.bg3, color: theme.color, glow: theme.glow };
-        document.getElementById('bg-layer').style.background = `linear-gradient(135deg, ${theme.bg1}, ${theme.bg2}, ${theme.bg3})`;
-        document.getElementById('bg-ornament').style.background = `radial-gradient(circle at 30% 20%, ${theme.glow}, transparent 50%), radial-gradient(circle at 70% 80%, ${theme.glow}, transparent 50%)`;
-        document.documentElement.style.setProperty('--primary', theme.primary);
-        document.documentElement.style.setProperty('--theme-glow', theme.glow);
-        const title = document.getElementById('main-title');
-        title.style.background = `linear-gradient(180deg, #fff, ${theme.primary}, ${theme.primary}cc)`;
-        title.style.webkitBackgroundClip = 'text';
-        title.style.webkitTextFillColor = 'transparent';
-        title.style.backgroundClip = 'text';
-        initParticles(theme.count || 100);
-        document.querySelectorAll('.theme-option').forEach(el => {
-            el.classList.toggle('active', el.dataset.theme === theme.id);
-        });
+    function applyTheme(t) {
+        curTheme = t;
+        tc = { bg1:t.bg1, bg2:t.bg2, bg3:t.bg3, p:t.p, glow:t.glow };
+        document.getElementById('bg').style.background = `linear-gradient(135deg,${t.bg1},${t.bg2},${t.bg3})`;
+        document.getElementById('bg-glow').style.background = `radial-gradient(ellipse at 30% 20%,${t.glow},transparent 50%),radial-gradient(ellipse at 70% 80%,${t.glow},transparent 50%)`;
+        const r = document.documentElement.style;
+        r.setProperty('--primary', t.primary);
+        r.setProperty('--primary-dark', t.primary);
+        r.setProperty('--glow', t.glow);
+        r.setProperty('--bg1', t.bg1); r.setProperty('--bg2', t.bg2); r.setProperty('--bg3', t.bg3);
+        r.setProperty('--particle', t.p);
+        const h = document.getElementById('title');
+        h.style.background = `linear-gradient(180deg,#fff,${t.primary},${t.primary}cc)`;
+        h.style.webkitBackgroundClip = 'text'; h.style.webkitTextFillColor = 'transparent'; h.style.backgroundClip = 'text';
+        initPts(t.count||100);
+        document.querySelectorAll('.theme-card').forEach(el => el.classList.toggle('active', el.dataset.id===t.id));
     }
 
-    function initThemeSelector() {
-        const grid = document.getElementById('theme-grid');
+    function initThemeGrid() {
+        const g = document.getElementById('theme-grid');
         THEMES.forEach(t => {
-            const div = document.createElement('div');
-            div.className = 'theme-option' + (t.id === 'chinese-red' ? ' active' : '');
-            div.dataset.theme = t.id;
-            div.style.background = `linear-gradient(135deg, ${t.bg1}, ${t.bg2}, ${t.bg3})`;
-            div.innerHTML = `<div class="label">${t.name}</div>`;
-            div.onclick = () => { applyTheme(t); liveUpdate(); };
-            grid.appendChild(div);
+            const d = document.createElement('div');
+            d.className = 'theme-card'+(t.id==='chinese'?' active':'');
+            d.dataset.id = t.id;
+            d.style.background = `linear-gradient(135deg,${t.bg1},${t.bg2},${t.bg3})`;
+            d.innerHTML = `<div class="t-name">${t.name}</div>`;
+            d.onclick = () => { applyTheme(t); liveUpdate(); };
+            g.appendChild(d);
         });
     }
 
-    // ========== 音效系统（激昂喜庆版） ==========
-    let audioCtx = null;
-    let audioReady = false;
-    const audioStatus = document.getElementById('audio-status');
+    // ========== 设置面板 ==========
+    function openSettings() { document.getElementById('settings-overlay').classList.add('open'); updateRecords(); }
+    function closeSettings() { document.getElementById('settings-overlay').classList.remove('open'); }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+        };
+    });
+
+    // ========== 音效 ==========
+    let ac = null, audioOk = false;
+    const toast = document.getElementById('audio-toast');
 
     async function initAudio() {
-        if (audioReady) return true;
+        if (audioOk) return;
         try {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') await audioCtx.resume();
-            audioReady = true;
-            audioStatus.style.display = 'block';
-            audioStatus.textContent = '🔊 音效已激活';
-            setTimeout(() => { audioStatus.style.display = 'none'; }, 3000);
-            return true;
-        } catch(e) {
-            audioStatus.style.display = 'block';
-            audioStatus.textContent = '⚠️ 音效不可用';
-            return false;
-        }
+            ac = new (window.AudioContext||window.webkitAudioContext)();
+            if (ac.state==='suspended') await ac.resume();
+            audioOk = true;
+            toast.style.display='block'; toast.textContent='🔊 音效已激活';
+            setTimeout(()=>toast.style.display='none',2500);
+        } catch(e) { toast.style.display='block'; toast.textContent='⚠️ 音效不可用'; }
     }
-    document.addEventListener('click', () => { initAudio(); }, { once: true });
+    document.addEventListener('click', ()=>initAudio(), {once:true});
 
-    // 喜庆鼓乐 - 抽奖滚动音效
-    function playRollSound() {
-        if (!audioReady || !audioCtx) return;
-        const vol = parseFloat(document.getElementById('in-vol-roll').value);
-        if (vol <= 0) return;
-        let beat = 0;
-        const interval = setInterval(() => {
-            if (!isRolling) { clearInterval(interval); return; }
+    function playRoll() {
+        if (!audioOk||!ac) return;
+        const v = parseFloat(document.getElementById('in-vol-roll').value);
+        if (v<=0) return;
+        let beat=0;
+        const iv = setInterval(()=>{
+            if (!isRolling) { clearInterval(iv); return; }
             try {
                 beat++;
-                // 鼓点：低音砰砰砰
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.type = 'triangle';
-                // 交替高低鼓点
-                const freq = beat % 4 === 0 ? 80 : (beat % 2 === 0 ? 120 : 100);
-                osc.frequency.value = freq;
-                const t = audioCtx.currentTime;
-                gain.gain.setValueAtTime(vol * 0.25, t);
-                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-                osc.start(t);
-                osc.stop(t + 0.08);
-
-                // 每拍加一个高音镲片声
-                if (beat % 2 === 0) {
-                    const osc2 = audioCtx.createOscillator();
-                    const gain2 = audioCtx.createGain();
-                    osc2.connect(gain2);
-                    gain2.connect(audioCtx.destination);
-                    osc2.type = 'sine';
-                    osc2.frequency.value = 1200 + Math.random() * 800;
-                    gain2.gain.setValueAtTime(vol * 0.08, t);
-                    gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
-                    osc2.start(t);
-                    osc2.stop(t + 0.04);
+                const o=ac.createOscillator(), g=ac.createGain();
+                o.connect(g); g.connect(ac.destination);
+                o.type='triangle'; o.frequency.value = beat%4===0?80:(beat%2===0?120:100);
+                const t=ac.currentTime;
+                g.gain.setValueAtTime(v*0.25,t);
+                g.gain.exponentialRampToValueAtTime(0.001,t+0.08);
+                o.start(t); o.stop(t+0.08);
+                if (beat%2===0) {
+                    const o2=ac.createOscillator(), g2=ac.createGain();
+                    o2.connect(g2); g2.connect(ac.destination);
+                    o2.type='sine'; o2.frequency.value=1200+Math.random()*800;
+                    g2.gain.setValueAtTime(v*0.08,t);
+                    g2.gain.exponentialRampToValueAtTime(0.001,t+0.04);
+                    o2.start(t); o2.stop(t+0.04);
                 }
-            } catch(e) {}
-        }, 120);
+            } catch(e){}
+        },120);
     }
 
-    // 胜利号角 + 鞭炮 + 锣鼓 - 中奖音效
-    function playWinSound() {
-        if (!audioReady || !audioCtx) return;
-        const vol = parseFloat(document.getElementById('in-vol-win').value);
-        if (vol <= 0) return;
+    function playWin() {
+        if (!audioOk||!ac) return;
+        const v = parseFloat(document.getElementById('in-vol-win').value);
+        if (v<=0) return;
         try {
-            const t = audioCtx.currentTime;
-            // 1. 胜利号角上行（C5→E5→G5→C6）
-            const fanfare = [523, 659, 784, 1047];
-            fanfare.forEach((freq, i) => {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.type = 'triangle';
-                osc.frequency.value = freq;
-                const start = t + i * 0.12;
-                gain.gain.setValueAtTime(0, start);
-                gain.gain.linearRampToValueAtTime(vol * 0.3, start + 0.05);
-                gain.gain.setValueAtTime(vol * 0.3, start + 0.2);
-                gain.gain.exponentialRampToValueAtTime(0.001, start + 0.4);
-                osc.start(start);
-                osc.stop(start + 0.4);
+            const t=ac.currentTime;
+            [523,659,784,1047].forEach((f,i)=>{
+                const o=ac.createOscillator(), g=ac.createGain();
+                o.connect(g); g.connect(ac.destination);
+                o.type='triangle'; o.frequency.value=f;
+                const s=t+i*0.12;
+                g.gain.setValueAtTime(0,s);
+                g.gain.linearRampToValueAtTime(v*0.3,s+0.05);
+                g.gain.setValueAtTime(v*0.3,s+0.2);
+                g.gain.exponentialRampToValueAtTime(0.001,s+0.4);
+                o.start(s); o.stop(s+0.4);
             });
-
-            // 2. 锣鼓：低音震荡（喜庆感）
-            [0, 0.2, 0.4, 0.6].forEach(delay => {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.type = 'sine';
-                osc.frequency.value = 120 + Math.random() * 40;
-                const start = t + 0.3 + delay;
-                gain.gain.setValueAtTime(0, start);
-                gain.gain.linearRampToValueAtTime(vol * 0.15, start + 0.02);
-                gain.gain.exponentialRampToValueAtTime(0.001, start + 0.2);
-                osc.start(start);
-                osc.stop(start + 0.2);
+            [0,0.2,0.4,0.6].forEach(d=>{
+                const o=ac.createOscillator(), g=ac.createGain();
+                o.connect(g); g.connect(ac.destination);
+                o.type='sine'; o.frequency.value=120+Math.random()*40;
+                const s=t+0.3+d;
+                g.gain.setValueAtTime(0,s);
+                g.gain.linearRampToValueAtTime(v*0.15,s+0.02);
+                g.gain.exponentialRampToValueAtTime(0.001,s+0.2);
+                o.start(s); o.stop(s+0.2);
             });
-
-            // 3. 鞭炮声（白噪声快速爆裂）
-            for (let i = 0; i < 12; i++) {
-                setTimeout(() => {
-                    try {
-                        const bufSize = audioCtx.sampleRate * 0.06;
-                        const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
-                        const data = buf.getChannelData(0);
-                        for (let j = 0; j < bufSize; j++) {
-                            data[j] = (Math.random() * 2 - 1) * Math.exp(-j / (bufSize * 0.15));
-                        }
-                        const noise = audioCtx.createBufferSource();
-                        const ng = audioCtx.createGain();
-                        noise.buffer = buf;
-                        noise.connect(ng);
-                        ng.connect(audioCtx.destination);
-                        ng.gain.value = vol * 0.12;
-                        noise.start();
-                        ng.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-                    } catch(e) {}
-                }, i * 60 + 200);
-            }
-
-            // 4. 欢呼/鼓掌（持续白噪声）
-            setTimeout(() => {
+            for (let i=0;i<12;i++) setTimeout(()=>{
                 try {
-                    const bufSize = audioCtx.sampleRate * 1.0;
-                    const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
-                    const data = buf.getChannelData(0);
-                    for (let i = 0; i < bufSize; i++) {
-                        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufSize * 0.5));
-                    }
-                    const noise = audioCtx.createBufferSource();
-                    const ng = audioCtx.createGain();
-                    noise.buffer = buf;
-                    noise.connect(ng);
-                    ng.connect(audioCtx.destination);
-                    ng.gain.value = vol * 0.06;
-                    noise.start();
-                    ng.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-                } catch(e) {}
-            }, 400);
-        } catch(e) {}
+                    const bs=ac.sampleRate*0.06, b=ac.createBuffer(1,bs,ac.sampleRate), d=b.getChannelData(0);
+                    for(let j=0;j<bs;j++) d[j]=(Math.random()*2-1)*Math.exp(-j/(bs*0.15));
+                    const n=ac.createBufferSource(), ng=ac.createGain();
+                    n.buffer=b; n.connect(ng); ng.connect(ac.destination);
+                    ng.gain.value=v*0.12; n.start();
+                    ng.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.05);
+                } catch(e){}
+            }, i*60+200);
+            setTimeout(()=>{
+                try {
+                    const bs=ac.sampleRate, b=ac.createBuffer(1,bs,ac.sampleRate), d=b.getChannelData(0);
+                    for(let i=0;i<bs;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(bs*0.5));
+                    const n=ac.createBufferSource(), ng=ac.createGain();
+                    n.buffer=b; n.connect(ng); ng.connect(ac.destination);
+                    ng.gain.value=v*0.06; n.start();
+                    ng.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.8);
+                } catch(e){}
+            },400);
+        } catch(e){}
     }
 
     // ========== 纸屑 ==========
-    function fireConfetti() {
-        if (document.getElementById('in-confetti').value === 'off') return;
-        const colors = ['#ffd700','#ff6b6b','#48dbfb','#ff9ff3','#54a0ff','#ff4757','#2ed573','#ff6348','#ffa502'];
-        for (let i = 0; i < 80; i++) {
-            const p = document.createElement('div');
-            p.className = 'confetti-piece';
-            const c = colors[Math.floor(Math.random()*colors.length)];
-            const s = Math.random()*8+4;
-            p.style.cssText = `left:${Math.random()*100}%;top:-10px;width:${s}px;height:${s*(Math.random()*0.5+0.5)}px;background:${c};border-radius:${Math.random()>0.5?'50%':'2px'};--fall-duration:${Math.random()*2+2}s;animation-delay:${Math.random()*1.5}s;`;
+    function confetti() {
+        if (document.getElementById('in-confetti').value==='off') return;
+        const colors=['#ffd700','#ff6b6b','#48dbfb','#ff9ff3','#54a0ff','#ff4757','#2ed573','#ff6348','#ffa502'];
+        for (let i=0;i<80;i++) {
+            const p=document.createElement('div'); p.className='confetti';
+            const c=colors[Math.floor(Math.random()*colors.length)], s=Math.random()*8+4;
+            p.style.cssText=`left:${Math.random()*100}%;top:-10px;width:${s}px;height:${s*(Math.random()*0.5+0.5)}px;background:${c};border-radius:${Math.random()>0.5?'50%':'2px'};--dur:${Math.random()*2+2}s;animation-delay:${Math.random()*1.5}s;`;
             document.body.appendChild(p);
-            setTimeout(() => p.remove(), 5000);
+            setTimeout(()=>p.remove(),5000);
         }
     }
 
-        // ========== 键盘快捷键 ==========
-    document.addEventListener('keydown', (e) => {
-        // 空格/回车：开始/停止抽奖
-        if (e.code === 'Space' || e.code === 'Enter') {
-            e.preventDefault();
-            toggleDraw();
-        }
-        // F：全屏切换
-        if (e.code === 'KeyF') {
-            toggleFullscreen();
-        }
-        // Esc：关闭设置面板
-        if (e.code === 'Escape') {
-            document.getElementById('backend-panel').style.display = 'none';
-        }
-    });
-
-    function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(e => {});
-        } else {
-            document.exitFullscreen();
-        }
-    }
-
-    // ========== 核心变量 ==========
-    let pool = [], available = [], winners = [], currentRoundWinners = [];
-    let isRolling = false, timer = null, currentRound = 1;
-
-    window.onload = () => {
-        initThemeSelector();
-        applyTheme(THEMES[0]);
-        const saved = localStorage.getItem('luckyDrawData');
-        if (saved) { loadSettings(); }
-        else { saveNames(); liveUpdate(); initSlots(); }
-    };
-
-    function togglePanel() {
-        const p = document.getElementById('backend-panel');
-        p.style.display = (p.style.display === 'flex') ? 'none' : 'flex';
-        if (p.style.display === 'flex') updateBackendRecord();
-    }
+    // ========== 核心逻辑 ==========
+    let pool=[], avail=[], winners=[], isRolling=false, timer=null, round=1;
 
     function liveUpdate() {
-        document.getElementById('main-title').innerText = document.getElementById('in-m-title').value;
-        document.getElementById('sub-title').innerText = document.getElementById('in-s-title').value;
-        document.getElementById('main-title').style.fontSize = document.getElementById('in-m-size').value + 'px';
-        document.documentElement.style.setProperty('--box-w', document.getElementById('in-box-w').value + 'px');
-        document.documentElement.style.setProperty('--box-h', document.getElementById('in-box-h').value + 'px');
-        document.getElementById('cfg-btn-icon-disp').innerText = document.getElementById('in-btn-icon').value;
-        document.documentElement.style.setProperty('--list-show', document.getElementById('in-list-show').value);
+        document.getElementById('title').innerText = document.getElementById('in-title').value;
+        document.getElementById('subtitle').innerText = document.getElementById('in-subtitle').value;
+        document.getElementById('title').style.fontSize = document.getElementById('in-size').value+'px';
+        document.getElementById('btn-icon').innerText = document.getElementById('in-icon').value;
     }
 
     function initSlots() {
-        const count = parseInt(document.getElementById('in-draw-count').value) || 1;
-        const container = document.getElementById('slot-container');
-        container.innerHTML = '';
-        for (let i = 0; i < count; i++) {
-            const s = document.createElement('div');
-            s.className = 'name-slot'; s.innerText = '✨';
-            container.appendChild(s);
-        }
+        const n = parseInt(document.getElementById('in-count').value)||1;
+        const c = document.getElementById('slots'); c.innerHTML='';
+        for(let i=0;i<n;i++){ const s=document.createElement('div'); s.className='slot'; s.innerText='✨'; c.appendChild(s); }
     }
 
-        // 应用名单（不重置中奖记录）
     function applyNames() {
         const text = document.getElementById('in-names').value;
-        const newPool = text.split(/[,，\n]/).map(n => n.trim()).filter(n => n !== "");
-        // 去重
-        pool = [...new Set(newPool)];
-        // 保留已中奖者，从可用名单中排除
-        available = pool.filter(n => !winners.includes(n));
-        document.getElementById('remain-count').innerText = available.length;
-        initSlots();
-        updateBackendRecord();
-        document.getElementById('save-status').innerText = '✅ 名单已应用，共 ' + pool.length + ' 人';
+        pool = text.split(/[,，\n]/).map(n=>n.trim()).filter(n=>n!=="");
+        avail = pool.filter(n=>!winners.includes(n));
+        document.getElementById('remain').innerText = avail.length;
+        initSlots(); updateRecords();
+        closeSettings();
     }
 
-    function saveNames() {
-        const text = document.getElementById('in-names').value;
-        pool = text.split(/[,，\n]/).map(n => n.trim()).filter(n => n !== "");
-        available = [...pool]; winners = []; currentRound = 1;
-        document.getElementById('round-history').innerHTML = '';
-        document.getElementById('remain-count').innerText = available.length;
-        initSlots(); updateBackendRecord();
+    function updateRecords() {
+        const el = document.getElementById('record-list');
+        el.innerHTML = winners.length===0 ? '暂无记录' : winners.map((w,i)=>`<div>🏆 第${i+1}轮: ${w}</div>`).join('');
     }
 
-    function updateBackendRecord() {
-        const rec = document.getElementById('backend-record-list');
-        rec.innerHTML = winners.length === 0
-            ? '📋 名单已加载，共 ' + pool.length + ' 人'
-            : winners.map((w,i) => `<div>🏆 第 ${i+1} 轮: ${w}</div>`).join('');
+    function exportWinners() {
+        if (winners.length===0) { alert('暂无中奖记录'); return; }
+        const text = winners.map((w,i)=>`第${i+1}轮: ${w}`).join('\n');
+        navigator.clipboard.writeText(text).then(()=>alert('✅ 已复制到剪贴板')).catch(()=>{
+            const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta);
+            ta.select(); document.execCommand('copy'); ta.remove(); alert('✅ 已复制到剪贴板');
+        });
+    }
+
+    function resetAll() {
+        if (!confirm('确定要重置所有数据吗？中奖记录将被清空。')) return;
+        winners=[]; round=1; avail=[...pool];
+        document.getElementById('history').innerHTML='';
+        document.getElementById('remain').innerText=avail.length;
+        document.getElementById('rounds').innerText='0';
+        document.getElementById('lottery-box').classList.remove('winner');
+        initSlots(); updateRecords();
     }
 
     function saveSettings() {
         try {
             const data = {
-                theme: currentTheme.id,
-                settings: {
-                    mTitle: document.getElementById('in-m-title').value,
-                    sTitle: document.getElementById('in-s-title').value,
-                    mSize: document.getElementById('in-m-size').value,
-                    boxW: document.getElementById('in-box-w').value,
-                    boxH: document.getElementById('in-box-h').value,
-                    btnIcon: document.getElementById('in-btn-icon').value,
-                    listShow: document.getElementById('in-list-show').value,
-                    drawCount: document.getElementById('in-draw-count').value,
+                theme: curTheme.id,
+                s: {
+                    title: document.getElementById('in-title').value,
+                    subtitle: document.getElementById('in-subtitle').value,
+                    size: document.getElementById('in-size').value,
+                    icon: document.getElementById('in-icon').value,
+                    count: document.getElementById('in-count').value,
                     names: document.getElementById('in-names').value,
                     volRoll: document.getElementById('in-vol-roll').value,
                     volWin: document.getElementById('in-vol-win').value,
                     confetti: document.getElementById('in-confetti').value
                 },
-                state: { pool, available, winners, currentRound }
+                state: { pool, avail, winners, round }
             };
-            localStorage.setItem('luckyDrawData', JSON.stringify(data));
-            document.getElementById('save-status').innerText = '✅ 已保存 ' + new Date().toLocaleTimeString();
-        } catch(e) { document.getElementById('save-status').innerText = '❌ 保存失败'; }
+            localStorage.setItem('luckyMoment', JSON.stringify(data));
+            document.getElementById('save-msg').innerText = '✅ 已保存 '+new Date().toLocaleTimeString();
+        } catch(e) { document.getElementById('save-msg').innerText = '❌ 保存失败'; }
     }
 
     function loadSettings() {
         try {
-            const raw = localStorage.getItem('luckyDrawData');
+            const raw = localStorage.getItem('luckyMoment');
             if (!raw) return;
             const data = JSON.parse(raw);
-            if (data.theme) {
-                const t = THEMES.find(t => t.id === data.theme);
-                if (t) applyTheme(t);
-            }
-            const s = data.settings;
+            if (data.theme) { const t=THEMES.find(t=>t.id===data.theme); if(t) applyTheme(t); }
+            const s = data.s;
             if (s) {
-                document.getElementById('in-m-title').value = s.mTitle || '🎊 年度盛典大抽奖';
-                document.getElementById('in-s-title').value = s.sTitle || '✦ 让好运在这一刻发生 ✦';
-                document.getElementById('in-m-size').value = s.mSize || '64';
-                document.getElementById('in-box-w').value = s.boxW || '720';
-                document.getElementById('in-box-h').value = s.boxH || '260';
-                document.getElementById('in-btn-icon').value = s.btnIcon || '🎁';
-                document.getElementById('in-list-show').value = s.listShow || 'block';
-                document.getElementById('in-draw-count').value = s.drawCount || '1';
-                document.getElementById('in-names').value = s.names || '陈明,王强,李芳,张伟,赵敏,孙杰,周涛,吴磊,郑洁,冯平,褚卫,卫华,蒋云,沈霞,韩梅,杨立,朱勇,秦丽,尤文,许博';
-                document.getElementById('in-vol-roll').value = s.volRoll || '0.6';
-                document.getElementById('in-vol-win').value = s.volWin || '0.8';
-                document.getElementById('in-confetti').value = s.confetti || 'on';
+                document.getElementById('in-title').value = s.title||'🎊 年度盛典大抽奖';
+                document.getElementById('in-subtitle').value = s.subtitle||'✦ 让好运在这一刻发生 ✦';
+                document.getElementById('in-size').value = s.size||'56';
+                document.getElementById('in-icon').value = s.icon||'🎁';
+                document.getElementById('in-count').value = s.count||'1';
+                document.getElementById('in-names').value = s.names||'';
+                document.getElementById('in-vol-roll').value = s.volRoll||'0.6';
+                document.getElementById('in-vol-win').value = s.volWin||'0.8';
+                document.getElementById('in-confetti').value = s.confetti||'on';
             }
             if (data.state) {
-                pool = data.state.pool || [];
-                available = data.state.available || [...pool];
-                winners = data.state.winners || [];
-                currentRound = data.state.currentRound || 1;
+                pool=data.state.pool||[]; avail=data.state.avail||[...pool];
+                winners=data.state.winners||[]; round=data.state.round||1;
             }
             liveUpdate(); initSlots();
-            const history = document.getElementById('round-history');
-            history.innerHTML = '';
-            winners.forEach((w,i) => {
-                const item = document.createElement('div');
-                item.className = 'history-item';
-                item.innerHTML = `<span class="round-label">🏆 第 ${i+1} 轮</span> · ${w}`;
-                history.prepend(item);
+            const h=document.getElementById('history'); h.innerHTML='';
+            winners.forEach((w,i)=>{
+                const d=document.createElement('div'); d.className='h-item';
+                d.innerHTML=`<b>🏆 第${i+1}轮</b> · ${w}`; h.prepend(d);
             });
-            document.getElementById('remain-count').innerText = available.length;
-            document.getElementById('save-status').innerText = '✅ 已恢复';
-        } catch(e) { saveNames(); liveUpdate(); initSlots(); }
+            document.getElementById('remain').innerText=avail.length;
+            document.getElementById('rounds').innerText=winners.length;
+            document.getElementById('save-msg').innerText='✅ 已恢复';
+        } catch(e) { applyNames(); liveUpdate(); initSlots(); }
     }
 
     function clearSettings() {
-        if (confirm('确定要清除所有已保存的设置吗？')) {
-            localStorage.removeItem('luckyDrawData');
-            document.getElementById('save-status').innerText = '🗑️ 已清除';
-            applyTheme(THEMES[0]); saveNames(); liveUpdate(); initSlots();
-        }
+        if (!confirm('确定要清除所有已保存的设置吗？')) return;
+        localStorage.removeItem('luckyMoment');
+        document.getElementById('save-msg').innerText='🗑️ 已清除';
+        applyTheme(THEMES[0]); applyNames(); liveUpdate(); initSlots();
     }
 
+    // ========== 抽奖 ==========
     function toggleDraw() {
-        const count = parseInt(document.getElementById('in-draw-count').value) || 1;
-        const btnText = document.getElementById('draw-btn-text');
+        const count = parseInt(document.getElementById('in-count').value)||1;
         const btn = document.getElementById('draw-btn');
+        const btnText = document.getElementById('btn-text');
         const box = document.getElementById('lottery-box');
         initAudio();
 
         if (!isRolling) {
-            if (available.length < count) { alert('🎯 可抽人数不足！'); return; }
+            if (avail.length < count) { alert('🎯 可抽人数不足！'); return; }
             isRolling = true;
             btnText.innerText = '✋ 停！';
             btn.classList.add('rolling');
-            playRollSound();
-
-            const slots = document.querySelectorAll('.name-slot');
-            timer = setInterval(() => {
-                slots.forEach(slot => {
-                    const idx = Math.floor(Math.random() * available.length);
-                    slot.innerText = available[idx];
-                    slot.className = 'name-slot rolling-text';
+            playRoll();
+            const slots = document.querySelectorAll('.slot');
+            timer = setInterval(()=>{
+                slots.forEach(s=>{
+                    s.innerText = avail[Math.floor(Math.random()*avail.length)];
+                    s.className = 'slot rolling';
                 });
-            }, 80);
+            },80);
         } else {
             isRolling = false;
             btnText.innerText = '🎯 开始抽奖';
             btn.classList.remove('rolling');
             clearInterval(timer);
-            box.classList.add('winner-active');
+            box.classList.add('winner');
 
-            currentRoundWinners = [];
-            const slots = document.querySelectorAll('.name-slot');
-            for (let i = 0; i < count; i++) {
-                const idx = Math.floor(Math.random() * available.length);
-                const pick = available.splice(idx, 1)[0];
-                currentRoundWinners.push(pick);
-                winners.push(pick);
+            const slots = document.querySelectorAll('.slot');
+            const roundWinners = [];
+            for (let i=0;i<count;i++) {
+                const idx = Math.floor(Math.random()*avail.length);
+                const pick = avail.splice(idx,1)[0];
+                roundWinners.push(pick); winners.push(pick);
                 slots[i].innerText = pick;
-                slots[i].className = 'name-slot winner-text';
+                slots[i].className = 'slot winner';
             }
-            addHistory(currentRoundWinners);
-            currentRound++;
-            document.getElementById('remain-count').innerText = available.length;
-            playWinSound();
-            fireConfetti();
-            setTimeout(() => box.classList.remove('winner-active'), 3000);
+
+            const h = document.getElementById('history');
+            const item = document.createElement('div');
+            item.className = 'h-item';
+            item.innerHTML = `<b>🏆 第${round}轮</b> · ${roundWinners.join('、')}`;
+            h.prepend(item);
+
+            round++;
+            document.getElementById('remain').innerText = avail.length;
+            document.getElementById('rounds').innerText = winners.length;
+            playWin(); confetti();
+            setTimeout(()=>box.classList.remove('winner'),3000);
         }
     }
 
-    function addHistory(list) {
-        const history = document.getElementById('round-history');
-        const item = document.createElement('div');
-        item.className = 'history-item';
-        item.innerHTML = `<span class="round-label">🏆 第 ${currentRound} 轮</span> · ${list.join('、')}`;
-        history.prepend(item);
-        updateBackendRecord();
+    // ========== 全屏 ==========
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+        else document.exitFullscreen();
     }
 
-    function resetLottery() {
-        if (confirm('确定要重置所有数据吗？')) {
-            saveNames();
-            document.getElementById('lottery-box').classList.remove('winner-active');
-        }
-    }
+    // ========== 快捷键 ==========
+    document.addEventListener('keydown', e => {
+        if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT') return;
+        if (e.code==='Space'||e.code==='Enter') { e.preventDefault(); toggleDraw(); }
+        if (e.code==='KeyF') toggleFullscreen();
+        if (e.code==='Escape') closeSettings();
+    });
+
+    // ========== 初始化 ==========
+    window.onload = () => {
+        initThemeGrid();
+        applyTheme(THEMES[0]);
+        const saved = localStorage.getItem('luckyMoment');
+        if (saved) loadSettings();
+        else { applyNames(); liveUpdate(); initSlots(); }
+    };
 </script>
 </body>
 </html>
