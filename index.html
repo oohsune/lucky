@@ -112,6 +112,7 @@
         .action-btn { flex: 1; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-green { background: #28a745; color: white; }
         .btn-red { background: #dc3545; color: white; }
+        .btn-blue { background: #007bff; color: white; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -229,6 +230,16 @@
             <button class="action-btn btn-red" onclick="resetLottery()">全系统重置</button>
         </div>
     </div>
+
+    <div class="setting-group">
+        <h3>6. 💾 持久化存储</h3>
+        <label>所有设置会自动保存到浏览器中</label>
+        <div class="flex-row">
+            <button class="action-btn btn-blue" onclick="saveSettings()">💾 立即保存所有设置</button>
+            <button class="action-btn btn-green" onclick="clearSettings()">🗑️ 清除已保存设置</button>
+        </div>
+        <span class="hint" id="save-status">关闭页面重新打开，设置将自动恢复。</span>
+    </div>
 </div>
 
 <audio id="audio-bg" loop></audio>
@@ -245,9 +256,14 @@
 
     // --- 初始化 ---
     window.onload = () => {
-        saveNames();
-        liveUpdate();
-        initSlots();
+        const saved = localStorage.getItem('luckyDrawData');
+        if (saved) {
+            loadSettings();
+        } else {
+            saveNames();
+            liveUpdate();
+            initSlots();
+        }
     };
 
     function togglePanel() {
@@ -304,6 +320,137 @@
         document.getElementById('round-history').innerHTML = '';
         document.getElementById('backend-record-list').innerText = '名单已加载，共' + pool.length + '人';
         initSlots();
+    }
+
+    // --- 持久化存储：保存设置到 localStorage ---
+    function saveSettings() {
+        try {
+            const data = {
+                settings: {
+                    mTitle: document.getElementById('in-m-title').value,
+                    sTitle: document.getElementById('in-s-title').value,
+                    mSize: document.getElementById('in-m-size').value,
+                    mColor: document.getElementById('in-m-color').value,
+                    mFont: document.getElementById('in-m-font').value,
+                    bg: document.getElementById('in-bg').value,
+                    mu1: document.getElementById('in-mu1').value,
+                    vol1: document.getElementById('in-vol1').value,
+                    mu2: document.getElementById('in-mu2').value,
+                    vol2: document.getElementById('in-vol2').value,
+                    boxW: document.getElementById('in-box-w').value,
+                    boxH: document.getElementById('in-box-h').value,
+                    boxB: document.getElementById('in-box-b').value,
+                    boxBg: document.getElementById('in-box-bg').value,
+                    btnIcon: document.getElementById('in-btn-icon').value,
+                    btnW: document.getElementById('in-btn-w').value,
+                    btnH: document.getElementById('in-btn-h').value,
+                    btnBg: document.getElementById('in-btn-bg').value,
+                    listShow: document.getElementById('in-list-show').value,
+                    drawCount: document.getElementById('in-draw-count').value,
+                    names: document.getElementById('in-names').value
+                },
+                state: {
+                    pool: pool,
+                    available: available,
+                    winners: winners,
+                    currentRound: currentRound
+                }
+            };
+            localStorage.setItem('luckyDrawData', JSON.stringify(data));
+            document.getElementById('save-status').innerText = '✅ 已保存于 ' + new Date().toLocaleTimeString();
+            document.getElementById('save-status').style.color = '#28a745';
+        } catch(e) {
+            document.getElementById('save-status').innerText = '❌ 保存失败: ' + e.message;
+            document.getElementById('save-status').style.color = '#dc3545';
+        }
+    }
+
+    // --- 从 localStorage 恢复设置 ---
+    function loadSettings() {
+        try {
+            const raw = localStorage.getItem('luckyDrawData');
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            const s = data.settings;
+            
+            if (s) {
+                document.getElementById('in-m-title').value = s.mTitle || '年度盛典大抽奖';
+                document.getElementById('in-s-title').value = s.sTitle || '让好运在这一刻发生';
+                document.getElementById('in-m-size').value = s.mSize || '60';
+                document.getElementById('in-m-color').value = s.mColor || '#ffffff';
+                document.getElementById('in-m-font').value = s.mFont || 'Microsoft YaHei';
+                document.getElementById('in-bg').value = s.bg || "url('背景.jpg')";
+                document.getElementById('in-mu1').value = s.mu1 || '音乐1.mp3';
+                document.getElementById('in-vol1').value = s.vol1 || '0.6';
+                document.getElementById('in-mu2').value = s.mu2 || '音乐2.mp3';
+                document.getElementById('in-vol2').value = s.vol2 || '0.8';
+                document.getElementById('in-box-w').value = s.boxW || '800';
+                document.getElementById('in-box-h').value = s.boxH || '300';
+                document.getElementById('in-box-b').value = s.boxB || '2';
+                document.getElementById('in-box-bg').value = s.boxBg || 'rgba(255,255,255,0.1)';
+                document.getElementById('in-btn-icon').value = s.btnIcon || '🎁';
+                document.getElementById('in-btn-w').value = s.btnW || '240';
+                document.getElementById('in-btn-h').value = s.btnH || '60';
+                document.getElementById('in-btn-bg').value = s.btnBg || "linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05))";
+                document.getElementById('in-list-show').value = s.listShow || 'block';
+                document.getElementById('in-draw-count').value = s.drawCount || '1';
+                document.getElementById('in-names').value = s.names || '陈明,王强,李芳,张伟,赵敏,孙杰,周涛,吴磊,郑洁,冯平,褚卫,卫华,蒋云,沈霞,韩梅,杨立,朱勇,秦丽,尤文,许博';
+            }
+            
+            // 恢复抽奖状态
+            if (data.state) {
+                pool = data.state.pool || [];
+                available = data.state.available || [...pool];
+                winners = data.state.winners || [];
+                currentRound = data.state.currentRound || 1;
+                
+                // 恢复中奖记录显示
+                const rec = document.getElementById('backend-record-list');
+                if (winners.length > 0) {
+                    rec.innerHTML = '';
+                    // 按轮次回显
+                    const history = document.getElementById('round-history');
+                    history.innerHTML = '';
+                    for (let i = 0; i < winners.length; i++) {
+                        const item = document.createElement('div');
+                        item.className = 'history-item';
+                        item.innerText = `第 ${i + 1} 轮中奖者: ${winners[i]}`;
+                        history.prepend(item);
+                    }
+                    rec.innerHTML = '已恢复 ' + winners.length + ' 条中奖记录（见前台）';
+                } else {
+                    rec.innerText = '名单已加载，共' + pool.length + '人';
+                }
+            }
+            
+            // 应用设置并初始化
+            liveUpdate();
+            initSlots();
+            
+            document.getElementById('save-status').innerText = '✅ 已从浏览器恢复设置';
+            document.getElementById('save-status').style.color = '#28a745';
+        } catch(e) {
+            console.log('加载设置失败', e);
+            document.getElementById('save-status').innerText = '⚠️ 恢复失败，使用默认设置';
+            document.getElementById('save-status').style.color = '#ffc107';
+            // 回退到默认
+            saveNames();
+            liveUpdate();
+            initSlots();
+        }
+    }
+
+    // --- 清除保存的设置 ---
+    function clearSettings() {
+        if (confirm('确定要清除所有已保存的设置吗？')) {
+            localStorage.removeItem('luckyDrawData');
+            document.getElementById('save-status').innerText = '🗑️ 已清除保存的设置';
+            document.getElementById('save-status').style.color = '#666';
+            // 重置为默认
+            saveNames();
+            liveUpdate();
+            initSlots();
+        }
     }
 
     // --- 核心逻辑 ---
