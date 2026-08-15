@@ -9,148 +9,146 @@
             --primary: #ffd700;
             --primary-dark: #b8860b;
             --glow: rgba(255,215,0,0.3);
-            --bg1: #0f0c29; --bg2: #302b63; --bg3: #24243e;
-            --particle: 255,215,0;
-            --glass: rgba(255,255,255,0.06);
-            --glass-border: rgba(255,255,255,0.1);
-            --text: rgba(255,255,255,0.9);
-            --text-dim: rgba(255,255,255,0.5);
+            --glass: rgba(255,255,255,0.08);
+            --glass-border: rgba(255,255,255,0.12);
+            --text: rgba(255,255,255,0.95);
+            --text-dim: rgba(255,255,255,0.6);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body, html { width: 100%; height: 100%; overflow: hidden; font-family: 'PingFang SC','Microsoft YaHei',sans-serif; }
 
         /* ===== 背景 ===== */
-        #bg { position: fixed; inset: 0; z-index: 0; background: linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3)); transition: background 0.8s; }
-        #bg-canvas { position: fixed; inset: 0; z-index: 1; }
-        #bg-glow { position: fixed; inset: 0; z-index: 1; pointer-events: none;
-            background: radial-gradient(ellipse at 30% 20%, var(--glow), transparent 50%),
-                        radial-gradient(ellipse at 70% 80%, var(--glow), transparent 50%);
-            transition: background 0.8s; }
+        #bg {
+            position: fixed; inset: 0; z-index: 0;
+            background-size: cover; background-position: center;
+            transition: background-image 0.8s ease;
+        }
+        #bg-overlay {
+            position: fixed; inset: 0; z-index: 1;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(2px);
+        }
 
-        /* ===== 顶部导航栏 ===== */
+        /* ===== 顶部导航 ===== */
         #navbar {
             position: fixed; top: 0; left: 0; right: 0; z-index: 50;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 24px;
-            background: rgba(0,0,0,0.2); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            padding: 14px 28px;
+            background: rgba(0,0,0,0.25); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--glass-border);
         }
-        #navbar .brand { display: flex; align-items: center; gap: 10px; }
-        #navbar .brand .logo { font-size: 24px; }
-        #navbar .brand .name { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: 2px; }
-        #navbar .brand .name span { color: var(--primary); }
-        #navbar .actions { display: flex; gap: 8px; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand .logo { font-size: 26px; }
+        .brand .name { font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: 3px; }
+        .brand .name span { color: var(--primary); }
+        .nav-actions { display: flex; gap: 10px; }
         .nav-btn {
-            width: 36px; height: 36px; border: 1px solid var(--glass-border);
-            background: var(--glass); border-radius: 10px; cursor: pointer;
+            width: 40px; height: 40px; border: 1px solid var(--glass-border);
+            background: var(--glass); border-radius: 12px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            font-size: 16px; color: var(--text); transition: all 0.2s;
+            font-size: 18px; color: var(--text); transition: all 0.2s;
         }
-        .nav-btn:hover { background: rgba(255,255,255,0.15); transform: scale(1.05); }
+        .nav-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.08); }
 
-        /* ===== 主内容区 ===== */
+        /* ===== 主内容 ===== */
         #main {
             position: relative; z-index: 2; width: 100%; height: 100%;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 70px 20px 20px;
+            padding: 80px 20px 20px;
         }
 
-        /* 标题区 */
-        #hero { text-align: center; margin-bottom: 24px; animation: fadeUp 0.8s ease-out; }
+        #hero { text-align: center; margin-bottom: 28px; animation: fadeUp 0.8s ease-out; }
         #hero h1 {
-            font-size: 56px; font-weight: 900; letter-spacing: 6px;
+            font-size: 58px; font-weight: 900; letter-spacing: 8px;
             color: var(--primary);
-            background: linear-gradient(180deg, #fff, var(--primary), var(--primary));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-            text-shadow: 0 0 40px var(--glow);
+            text-shadow: 0 0 40px var(--glow), 0 4px 20px rgba(0,0,0,0.5);
         }
-        #hero p { color: var(--text-dim); font-size: 16px; letter-spacing: 4px; margin-top: 6px; font-weight: 300; }
+        #hero p { color: var(--text-dim); font-size: 17px; letter-spacing: 5px; margin-top: 8px; font-weight: 300; }
 
-        /* 状态栏 */
         #status-bar {
-            display: flex; gap: 24px; margin-bottom: 20px;
-            font-size: 13px; color: var(--text-dim); letter-spacing: 1px;
+            display: flex; gap: 32px; margin-bottom: 24px;
+            font-size: 14px; color: var(--text-dim); letter-spacing: 1px;
         }
-        #status-bar .stat { display: flex; align-items: center; gap: 6px; }
-        #status-bar .stat b { color: var(--primary); font-size: 18px; font-weight: 800; }
+        #status-bar .stat { display: flex; align-items: center; gap: 8px; }
+        #status-bar .stat b { color: var(--primary); font-size: 20px; font-weight: 800; }
 
         /* 抽奖盒 */
         #lottery-box {
-            width: min(720px, 90vw); height: 240px;
-            border: 2px solid rgba(255,215,0,0.25);
+            width: min(700px, 88vw); height: 220px;
+            border: 2px solid var(--glass-border);
             background: var(--glass);
-            border-radius: 20px;
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
             display: flex; align-items: center; justify-content: center;
             position: relative; overflow: hidden;
-            box-shadow: 0 0 50px var(--glow), inset 0 0 40px rgba(255,215,0,0.03);
+            box-shadow: 0 0 60px var(--glow), inset 0 0 40px rgba(255,255,255,0.02);
             transition: all 0.4s;
-            margin-bottom: 28px;
+            margin-bottom: 32px;
         }
         #lottery-box::before {
-            content: ''; position: absolute; inset: -2px; border-radius: 22px; z-index: -1;
+            content: ''; position: absolute; inset: -2px; border-radius: 26px; z-index: -1;
             background: linear-gradient(45deg, transparent, var(--primary), transparent, var(--primary), transparent);
             background-size: 300% 300%; animation: borderFlow 4s linear infinite;
         }
         @keyframes borderFlow { 0%{background-position:0% 50%} 100%{background-position:300% 50%} }
         #lottery-box.winner { box-shadow: 0 0 100px var(--glow); border-color: var(--primary); }
 
-        .slots { display: flex; gap: 16px; width: 100%; padding: 0 24px; justify-content: center; }
+        .slots { display: flex; gap: 20px; width: 100%; padding: 0 28px; justify-content: center; }
         .slot {
-            flex: 1; max-width: 300px; text-align: center;
-            font-size: 2.8rem; font-weight: 800; color: var(--text);
+            flex: 1; max-width: 280px; text-align: center;
+            font-size: 2.6rem; font-weight: 800; color: var(--text);
             min-height: 70px; display: flex; align-items: center; justify-content: center;
-            border-radius: 12px; position: relative;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            border-radius: 14px; position: relative;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.4);
         }
         .slot:not(:last-child)::after {
-            content: ''; position: absolute; right: -8px; top: 15%; height: 70%;
+            content: ''; position: absolute; right: -10px; top: 15%; height: 70%;
             width: 1px; background: var(--glass-border);
         }
         .slot.rolling { color: rgba(255,255,255,0.6); animation: flicker 0.1s infinite; }
         @keyframes flicker { 0%,100%{opacity:0.6} 50%{opacity:1} }
         .slot.winner {
             color: var(--primary);
-            text-shadow: 0 0 20px var(--glow), 0 0 40px var(--glow);
+            text-shadow: 0 0 24px var(--glow), 0 0 48px var(--glow);
             animation: pop 0.6s cubic-bezier(0.175,0.885,0.32,1.275);
         }
         @keyframes pop { 0%{transform:scale(0.3);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
 
         /* 抽奖按钮 */
         #draw-btn {
-            width: 200px; height: 60px; border: none; border-radius: 50px;
+            width: 210px; height: 62px; border: none; border-radius: 50px;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: #1a1a2e; font-size: 1.2rem; font-weight: 800;
-            letter-spacing: 3px; cursor: pointer; position: relative; overflow: hidden;
-            box-shadow: 0 8px 30px var(--glow); transition: all 0.3s;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
+            color: #1a1a2e; font-size: 1.25rem; font-weight: 800;
+            letter-spacing: 4px; cursor: pointer; position: relative; overflow: hidden;
+            box-shadow: 0 10px 36px var(--glow); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 12px;
         }
         #draw-btn::after {
             content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.15), transparent);
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
             transform: rotate(45deg); animation: shine 3s ease-in-out infinite;
         }
         @keyframes shine { 0%{transform:translateX(-100%) rotate(45deg)} 100%{transform:translateX(100%) rotate(45deg)} }
-        #draw-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 40px var(--glow); }
+        #draw-btn:hover { transform: translateY(-4px); box-shadow: 0 14px 44px var(--glow); }
         #draw-btn:active { transform: scale(0.97); }
         #draw-btn.rolling {
             background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-            box-shadow: 0 8px 30px rgba(255,107,107,0.4);
+            box-shadow: 0 10px 36px rgba(255,107,107,0.4);
             animation: pulse 1s ease-in-out infinite;
         }
-        @keyframes pulse { 0%,100%{box-shadow:0 8px 30px rgba(255,107,107,0.4)} 50%{box-shadow:0 8px 50px rgba(255,107,107,0.7)} }
+        @keyframes pulse { 0%,100%{box-shadow:0 10px 36px rgba(255,107,107,0.4)} 50%{box-shadow:0 10px 54px rgba(255,107,107,0.7)} }
 
         /* 中奖记录 */
         #history {
-            margin-top: 20px; width: min(600px, 85vw); max-height: 100px;
+            margin-top: 24px; width: min(580px, 85vw); max-height: 90px;
             overflow-y: auto; scrollbar-width: none;
         }
         #history::-webkit-scrollbar { display: none; }
         .h-item {
             background: var(--glass); border: 1px solid var(--glass-border);
-            padding: 6px 16px; border-radius: 8px; margin-bottom: 4px;
+            padding: 7px 18px; border-radius: 10px; margin-bottom: 5px;
             font-size: 13px; color: var(--text-dim); text-align: center;
-            animation: fadeUp 0.4s; backdrop-filter: blur(10px);
+            animation: fadeUp 0.4s; backdrop-filter: blur(12px);
         }
         .h-item b { color: var(--primary); }
 
@@ -161,144 +159,140 @@
         /* ===== 设置弹窗 ===== */
         #settings-overlay {
             position: fixed; inset: 0; z-index: 200;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.65); backdrop-filter: blur(10px);
             display: none; align-items: center; justify-content: center;
             animation: fadeIn 0.3s;
         }
         #settings-overlay.open { display: flex; }
         #settings-modal {
-            width: min(520px, 92vw); max-height: 85vh;
-            background: rgba(15,15,30,0.97); backdrop-filter: blur(30px);
-            border: 1px solid var(--glass-border); border-radius: 20px;
+            width: min(540px, 92vw); max-height: 85vh;
+            background: rgba(10,10,25,0.97); backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border); border-radius: 22px;
             overflow: hidden; display: flex; flex-direction: column;
-            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.6);
             animation: scaleIn 0.3s ease-out;
         }
-        @keyframes scaleIn { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
+        @keyframes scaleIn { from{transform:scale(0.92);opacity:0} to{transform:scale(1);opacity:1} }
         @keyframes fadeIn { from{opacity:0} to{opacity:1} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
 
         #settings-header {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 16px 20px; border-bottom: 1px solid var(--glass-border);
+            padding: 18px 22px; border-bottom: 1px solid var(--glass-border);
         }
-        #settings-header h2 { font-size: 16px; color: var(--text); font-weight: 700; }
+        #settings-header h2 { font-size: 17px; color: var(--text); font-weight: 700; }
         #settings-close {
-            width: 32px; height: 32px; border: none; background: var(--glass);
-            border-radius: 8px; cursor: pointer; font-size: 16px; color: var(--text-dim);
+            width: 34px; height: 34px; border: none; background: var(--glass);
+            border-radius: 10px; cursor: pointer; font-size: 17px; color: var(--text-dim);
             display: flex; align-items: center; justify-content: center; transition: all 0.2s;
         }
         #settings-close:hover { background: rgba(255,100,100,0.2); color: #ff6b6b; }
 
-        /* 设置 Tab */
         #settings-tabs {
             display: flex; border-bottom: 1px solid var(--glass-border);
-            padding: 0 12px; overflow-x: auto; scrollbar-width: none;
+            padding: 0 14px; overflow-x: auto; scrollbar-width: none;
         }
         #settings-tabs::-webkit-scrollbar { display: none; }
         .tab-btn {
-            padding: 10px 14px; border: none; background: none;
-            color: var(--text-dim); font-size: 12px; cursor: pointer;
+            padding: 12px 16px; border: none; background: none;
+            color: var(--text-dim); font-size: 13px; cursor: pointer;
             border-bottom: 2px solid transparent; transition: all 0.2s;
             white-space: nowrap; font-weight: 500;
         }
         .tab-btn:hover { color: var(--text); }
         .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-        #settings-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+        #settings-body { flex: 1; overflow-y: auto; padding: 18px 22px; }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
-        .field { margin-bottom: 14px; }
-        .field label { display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 4px; font-weight: 500; }
+        .field { margin-bottom: 16px; }
+        .field label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 5px; font-weight: 500; }
         .field input, .field select, .field textarea {
-            width: 100%; padding: 8px 10px; border: 1px solid var(--glass-border);
-            border-radius: 8px; background: var(--glass); color: var(--text);
-            font-size: 12px; outline: none; transition: border-color 0.2s;
+            width: 100%; padding: 9px 12px; border: 1px solid var(--glass-border);
+            border-radius: 10px; background: var(--glass); color: var(--text);
+            font-size: 13px; outline: none; transition: border-color 0.2s;
         }
         .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--primary); }
         .field select option { background: #1a1a2e; }
-        .field .hint { font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 3px; }
-        .field-row { display: flex; gap: 8px; }
+        .field .hint { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 4px; }
+        .field-row { display: flex; gap: 10px; }
         .field-row > * { flex: 1; }
 
         /* 主题网格 */
-        .theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .theme-card {
-            height: 52px; border-radius: 10px; cursor: pointer;
+            height: 70px; border-radius: 12px; cursor: pointer;
             border: 2px solid transparent; position: relative; overflow: hidden;
-            transition: all 0.2s;
+            transition: all 0.2s; background-size: cover; background-position: center;
         }
-        .theme-card:hover { transform: scale(1.05); }
-        .theme-card.active { border-color: var(--primary); box-shadow: 0 0 12px var(--glow); }
+        .theme-card:hover { transform: scale(1.04); }
+        .theme-card.active { border-color: var(--primary); box-shadow: 0 0 16px var(--glow); }
         .theme-card .t-name {
-            position: absolute; bottom: 3px; left: 0; right: 0;
-            text-align: center; font-size: 8px; color: white;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-weight: 600;
+            position: absolute; bottom: 4px; left: 0; right: 0;
+            text-align: center; font-size: 10px; color: white;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9); font-weight: 600;
+            background: rgba(0,0,0,0.4); padding: 2px 0;
         }
 
-        .btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; }
-        .btn:hover { transform: translateY(-1px); opacity: 0.9; }
+        .btn { padding: 11px 18px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; }
+        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
         .btn-gold { background: linear-gradient(135deg, #ffd700, #b8860b); color: #1a1a2e; }
         .btn-green { background: #2d8a4e; color: white; }
         .btn-red { background: #c0392b; color: white; }
         .btn-ghost { background: var(--glass); color: var(--text); border: 1px solid var(--glass-border); }
 
-        #save-msg { font-size: 11px; color: var(--text-dim); margin-top: 10px; text-align: center; }
+        #save-msg { font-size: 12px; color: var(--text-dim); margin-top: 12px; text-align: center; }
 
         /* 快捷键提示 */
         #shortcut-hint {
-            position: fixed; bottom: 16px; right: 16px; z-index: 10;
-            font-size: 11px; color: rgba(255,255,255,0.25);
-            background: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 8px;
+            position: fixed; bottom: 18px; right: 18px; z-index: 10;
+            font-size: 12px; color: rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.35); padding: 8px 14px; border-radius: 10px;
             backdrop-filter: blur(10px);
         }
         #shortcut-hint kbd {
-            background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 3px;
-            font-family: monospace; font-size: 10px;
+            background: rgba(255,255,255,0.12); padding: 2px 6px; border-radius: 4px;
+            font-family: monospace; font-size: 11px;
         }
 
-        /* 音频状态 */
         #audio-toast {
-            position: fixed; top: 60px; right: 20px; z-index: 100;
-            background: rgba(0,0,0,0.6); color: var(--text); padding: 8px 16px;
-            border-radius: 10px; font-size: 12px; backdrop-filter: blur(10px);
+            position: fixed; top: 70px; right: 24px; z-index: 100;
+            background: rgba(0,0,0,0.65); color: var(--text); padding: 10px 18px;
+            border-radius: 12px; font-size: 13px; backdrop-filter: blur(12px);
             display: none; animation: fadeUp 0.3s;
         }
 
         @media (max-width: 768px) {
-            #hero h1 { font-size: 32px; letter-spacing: 3px; }
-            #hero p { font-size: 13px; }
-            #lottery-box { height: 180px; }
+            #hero h1 { font-size: 34px; letter-spacing: 4px; }
+            #hero p { font-size: 14px; }
+            #lottery-box { height: 170px; }
             .slot { font-size: 1.8rem; }
-            #draw-btn { width: 160px; height: 50px; font-size: 1rem; }
+            #draw-btn { width: 170px; height: 52px; font-size: 1.05rem; }
             #settings-modal { width: 95vw; max-height: 90vh; }
-            .theme-grid { grid-template-columns: repeat(3, 1fr); }
+            .theme-grid { grid-template-columns: repeat(2, 1fr); }
             #shortcut-hint { display: none; }
-            #navbar { padding: 10px 16px; }
+            #navbar { padding: 12px 18px; }
         }
     </style>
 </head>
 <body>
 
 <div id="bg"></div>
-<canvas id="bg-canvas"></canvas>
-<div id="bg-glow"></div>
+<div id="bg-overlay"></div>
 <div id="audio-toast">🔊 音效已激活</div>
 
-<!-- 顶部导航 -->
 <nav id="navbar">
     <div class="brand">
         <span class="logo">🍀</span>
         <span class="name">幸运<span>时刻</span></span>
     </div>
-    <div class="actions">
+    <div class="nav-actions">
         <button class="nav-btn" onclick="toggleFullscreen()" title="全屏 (F)">⛶</button>
         <button class="nav-btn" onclick="openSettings()" title="设置">⚙️</button>
     </div>
 </nav>
 
-<!-- 主内容 -->
 <div id="main">
     <div id="hero">
         <h1 id="title">🎊 年度盛典大抽奖</h1>
@@ -322,12 +316,10 @@
     <div id="history"></div>
 </div>
 
-<!-- 快捷键提示 -->
 <div id="shortcut-hint">
     <kbd>空格</kbd> 抽奖 &nbsp; <kbd>F</kbd> 全屏 &nbsp; <kbd>Esc</kbd> 关闭
 </div>
 
-<!-- 设置弹窗 -->
 <div id="settings-overlay" onclick="if(event.target===this)closeSettings()">
     <div id="settings-modal">
         <div id="settings-header">
@@ -343,18 +335,16 @@
             <button class="tab-btn" data-tab="storage">💾 存储</button>
         </div>
         <div id="settings-body">
-            <!-- 主题 -->
             <div class="tab-panel active" id="tab-theme">
                 <div class="field">
-                    <label>选择主题风格</label>
+                    <label>选择主题风格（AI 生成氛围背景）</label>
                     <div class="theme-grid" id="theme-grid"></div>
                 </div>
             </div>
-            <!-- 标题 -->
             <div class="tab-panel" id="tab-title">
                 <div class="field"><label>主标题</label><input type="text" id="in-title" value="🎊 年度盛典大抽奖" oninput="liveUpdate()"></div>
                 <div class="field"><label>副标题</label><input type="text" id="in-subtitle" value="✦ 让好运在这一刻发生 ✦" oninput="liveUpdate()"></div>
-                <div class="field"><label>标题大小</label><input type="number" id="in-size" value="56" oninput="liveUpdate()"></div>
+                <div class="field"><label>标题大小</label><input type="number" id="in-size" value="58" oninput="liveUpdate()"></div>
                 <div class="field"><label>按钮图标</label>
                     <select id="in-icon" onchange="liveUpdate()">
                         <option value="🎁">🎁 礼物</option><option value="🔥">🔥 火热</option>
@@ -363,7 +353,6 @@
                     </select>
                 </div>
             </div>
-            <!-- 音效 -->
             <div class="tab-panel" id="tab-sound">
                 <div class="field"><label>抽奖音效音量</label><input type="range" id="in-vol-roll" min="0" max="1" step="0.1" value="0.6"></div>
                 <div class="field"><label>中奖音效音量</label><input type="range" id="in-vol-win" min="0" max="1" step="0.1" value="0.8"></div>
@@ -372,7 +361,6 @@
                 </div>
                 <div class="field"><div class="hint">点击抽奖自动激活音效，内置喜庆鼓乐+胜利号角+鞭炮声</div></div>
             </div>
-            <!-- 名单 -->
             <div class="tab-panel" id="tab-names">
                 <div class="field"><label>同时抽奖人数</label><input type="number" id="in-count" value="1" min="1" max="10" oninput="initSlots()"></div>
                 <div class="field"><label>名单（逗号或换行隔开）</label>
@@ -383,17 +371,15 @@
                 </div>
                 <div class="field"><div class="hint">应用名单不会清除已有中奖记录，已中奖者自动排除</div></div>
             </div>
-            <!-- 记录 -->
             <div class="tab-panel" id="tab-records">
                 <div class="field"><label>中奖记录</label>
-                    <div id="record-list" style="font-size:12px;background:var(--glass);padding:10px;border-radius:8px;max-height:120px;overflow-y:auto;color:var(--text-dim);">暂无记录</div>
+                    <div id="record-list" style="font-size:12px;background:var(--glass);padding:12px;border-radius:10px;max-height:120px;overflow-y:auto;color:var(--text-dim);">暂无记录</div>
                 </div>
                 <div class="field-row">
                     <button class="btn btn-ghost" onclick="exportWinners()">📤 导出名单</button>
                     <button class="btn btn-red" onclick="resetAll()">⟳ 全部重置</button>
                 </div>
             </div>
-            <!-- 存储 -->
             <div class="tab-panel" id="tab-storage">
                 <div class="field-row">
                     <button class="btn btn-gold" onclick="saveSettings()">💾 保存设置</button>
@@ -406,84 +392,24 @@
 </div>
 
 <script>
-    // ========== 主题 ==========
+    // ========== 主题配置（使用 AI 生成背景图） ==========
     const THEMES = [
-        { id:'chinese',   name:'🏮 中国风',   bg1:'#1a0505', bg2:'#4a0a0a', bg3:'#2a0505', primary:'#ff2222', glow:'rgba(255,34,34,0.3)',  p:'255,50,50',   count:100 },
-        { id:'gala',      name:'🥇 年会金',   bg1:'#1a1200', bg2:'#3a2a00', bg3:'#2a1a00', primary:'#ffd700', glow:'rgba(255,215,0,0.35)', p:'255,215,0',   count:120 },
-        { id:'beauty',    name:'💄 美妆风',   bg1:'#1a0510', bg2:'#3a1025', bg3:'#2a0818', primary:'#ff69b4', glow:'rgba(255,105,180,0.3)',p:'255,105,180', count:130 },
-        { id:'spring',    name:'🧧 新春',     bg1:'#0a0a00', bg2:'#3a0a00', bg3:'#1a0500', primary:'#ff4400', glow:'rgba(255,68,0,0.3)',   p:'255,68,0',    count:110 },
-        { id:'royal',     name:'👑 紫金',     bg1:'#0a0015', bg2:'#2a0040', bg3:'#1a0020', primary:'#b388ff', glow:'rgba(179,136,255,0.3)',p:'179,136,255', count:120 },
-        { id:'luxury',    name:'🖤 黑金',     bg1:'#0a0a0a', bg2:'#1a1a0a', bg3:'#0a0a0a', primary:'#ffd700', glow:'rgba(255,215,0,0.3)',  p:'255,215,0',   count:90 },
-        { id:'aurora',    name:'🌌 极光',     bg1:'#0a1628', bg2:'#1a3a3a', bg3:'#0d2818', primary:'#00ff88', glow:'rgba(0,255,136,0.3)',  p:'0,255,136',   count:100 },
-        { id:'sunset',    name:'🌅 落日',     bg1:'#1a0a0a', bg2:'#4a1a0a', bg3:'#2a0a0a', primary:'#ff6b35', glow:'rgba(255,107,53,0.3)', p:'255,107,53',  count:110 },
-        { id:'ocean',     name:'🌊 深海',     bg1:'#0a1628', bg2:'#0a2a4a', bg3:'#0a1a2a', primary:'#00bfff', glow:'rgba(0,191,255,0.3)',  p:'0,191,255',   count:100 },
-        { id:'cyber',     name:'⚡ 赛博',     bg1:'#0a0015', bg2:'#1a0030', bg3:'#0a0020', primary:'#ff00ff', glow:'rgba(255,0,255,0.3)',  p:'255,0,255',   count:140 },
-        { id:'forest',    name:'🌲 森林',     bg1:'#0a1a0a', bg2:'#1a2a0a', bg3:'#0a1a0a', primary:'#7ec850', glow:'rgba(126,200,80,0.3)', p:'126,200,80',  count:90 },
-        { id:'sakura',    name:'🌸 樱花',     bg1:'#1a0a1a', bg2:'#3a1a2a', bg3:'#2a0a1a', primary:'#ff6b9d', glow:'rgba(255,107,157,0.3)',p:'255,107,157', count:130 },
+        { id:'chinese',   name:'🏮 中国风',   bg:'assets/bg-chinese.png',   primary:'#ff2222', glow:'rgba(255,34,34,0.35)' },
+        { id:'tech',      name:'⚡ 科技感',   bg:'assets/bg-tech.png',      primary:'#00d4ff', glow:'rgba(0,212,255,0.35)' },
+        { id:'luxury',    name:'👑 黑金奢华', bg:'assets/bg-luxury.png',    primary:'#ffd700', glow:'rgba(255,215,0,0.35)' },
+        { id:'beauty',    name:'💄 美妆风',   bg:'assets/bg-beauty.png',    primary:'#ff69b4', glow:'rgba(255,105,180,0.35)' },
+        { id:'finance',   name:'💰 金融风',   bg:'assets/bg-finance.png',   primary:'#4a90d9', glow:'rgba(74,144,217,0.35)' },
+        { id:'lifestyle', name:'🌿 生活风',   bg:'assets/bg-lifestyle.png', primary:'#ff8c42', glow:'rgba(255,140,66,0.35)' },
     ];
     let curTheme = THEMES[0];
-    let tc = { bg1:'#1a0505', bg2:'#4a0a0a', bg3:'#2a0505', p:'255,50,50', glow:'rgba(255,34,34,0.3)' };
-
-    // ========== Canvas 粒子 ==========
-    const cv = document.getElementById('bg-canvas'), cx = cv.getContext('2d');
-    let pts = [], mx = 0, my = 0;
-    function resize() { cv.width = innerWidth; cv.height = innerHeight; }
-    addEventListener('resize', resize); resize();
-    addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
-
-    class Pt {
-        constructor() { this.init(); }
-        init() {
-            this.x = Math.random()*cv.width; this.y = Math.random()*cv.height;
-            this.s = Math.random()*3.5+1.5;
-            this.vx = (Math.random()-0.5)*0.4; this.vy = (Math.random()-0.5)*0.4;
-            this.o = Math.random()*0.35+0.15; this.c = tc.p;
-        }
-        update() {
-            this.x += this.vx; this.y += this.vy;
-            const dx = mx-this.x, dy = my-this.y, d = Math.sqrt(dx*dx+dy*dy);
-            if (d < 150) { this.x -= dx*0.008; this.y -= dy*0.008; }
-            if (this.x<0||this.x>cv.width||this.y<0||this.y>cv.height) this.init();
-        }
-        draw() {
-            cx.beginPath(); cx.arc(this.x,this.y,this.s,0,Math.PI*2);
-            cx.fillStyle = `rgba(${this.c},${this.o})`; cx.fill();
-            cx.shadowBlur = 12; cx.shadowColor = `rgba(${this.c},0.4)`;
-        }
-    }
-
-    function initPts(n) { pts = []; for (let i=0;i<(n||100);i++) pts.push(new Pt()); }
-
-    function draw() {
-        cx.clearRect(0,0,cv.width,cv.height);
-        const g = cx.createLinearGradient(0,0,cv.width,cv.height);
-        g.addColorStop(0,tc.bg1); g.addColorStop(0.5,tc.bg2); g.addColorStop(1,tc.bg3);
-        cx.fillStyle = g; cx.fillRect(0,0,cv.width,cv.height);
-        for (let i=0;i<pts.length;i++) for (let j=i+1;j<pts.length;j++) {
-            const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.sqrt(dx*dx+dy*dy);
-            if (d<130) { cx.beginPath(); cx.moveTo(pts[i].x,pts[i].y); cx.lineTo(pts[j].x,pts[j].y);
-                cx.strokeStyle=`rgba(255,255,255,${0.03*(1-d/130)})`; cx.stroke(); }
-        }
-        pts.forEach(p=>{p.update();p.draw();}); cx.shadowBlur=0;
-        requestAnimationFrame(draw);
-    }
-    initPts(100); draw();
 
     function applyTheme(t) {
         curTheme = t;
-        tc = { bg1:t.bg1, bg2:t.bg2, bg3:t.bg3, p:t.p, glow:t.glow };
-        document.getElementById('bg').style.background = `linear-gradient(135deg,${t.bg1},${t.bg2},${t.bg3})`;
-        document.getElementById('bg-glow').style.background = `radial-gradient(ellipse at 30% 20%,${t.glow},transparent 50%),radial-gradient(ellipse at 70% 80%,${t.glow},transparent 50%)`;
+        document.getElementById('bg').style.backgroundImage = `url('${t.bg}')`;
         const r = document.documentElement.style;
         r.setProperty('--primary', t.primary);
         r.setProperty('--primary-dark', t.primary);
         r.setProperty('--glow', t.glow);
-        r.setProperty('--bg1', t.bg1); r.setProperty('--bg2', t.bg2); r.setProperty('--bg3', t.bg3);
-        r.setProperty('--particle', t.p);
-        const h = document.getElementById('title');
-        h.style.background = `linear-gradient(180deg,#fff,${t.primary},${t.primary}cc)`;
-        h.style.webkitBackgroundClip = 'text'; h.style.webkitTextFillColor = 'transparent'; h.style.backgroundClip = 'text';
-        initPts(t.count||100);
         document.querySelectorAll('.theme-card').forEach(el => el.classList.toggle('active', el.dataset.id===t.id));
     }
 
@@ -493,7 +419,7 @@
             const d = document.createElement('div');
             d.className = 'theme-card'+(t.id==='chinese'?' active':'');
             d.dataset.id = t.id;
-            d.style.background = `linear-gradient(135deg,${t.bg1},${t.bg2},${t.bg3})`;
+            d.style.backgroundImage = `url('${t.bg}')`;
             d.innerHTML = `<div class="t-name">${t.name}</div>`;
             d.onclick = () => { applyTheme(t); liveUpdate(); };
             g.appendChild(d);
@@ -701,7 +627,7 @@
             if (s) {
                 document.getElementById('in-title').value = s.title||'🎊 年度盛典大抽奖';
                 document.getElementById('in-subtitle').value = s.subtitle||'✦ 让好运在这一刻发生 ✦';
-                document.getElementById('in-size').value = s.size||'56';
+                document.getElementById('in-size').value = s.size||'58';
                 document.getElementById('in-icon').value = s.icon||'🎁';
                 document.getElementById('in-count').value = s.count||'1';
                 document.getElementById('in-names').value = s.names||'';
