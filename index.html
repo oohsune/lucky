@@ -5,22 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0b0c16">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>🍀 幸运时刻</title>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>抽奖系统</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%80%3C/text%3E%3C/svg%3E">
     <style>
-        /* ================================================================
-           基础 & 设计变量
-           ================================================================ */
+        /* ==================================================================
+           0. 基础与设计变量
+           ================================================================== */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
             --primary: #ffd700;
-            --glow: rgba(255, 215, 0, 0.45);
+            --glow: rgba(255, 215, 0, 0.40);
+            --orb1: rgba(255, 215, 0, 0.26);
+            --orb2: rgba(255, 120, 60, 0.20);
             --text: #ffffff;
-            --text-soft: rgba(255, 255, 255, 0.66);
-            --text-faint: rgba(255, 255, 255, 0.4);
+            --text-soft: rgba(255, 255, 255, 0.70);
+            --text-faint: rgba(255, 255, 255, 0.42);
             --glass: rgba(255, 255, 255, 0.07);
-            --glass-strong: rgba(18, 20, 36, 0.55);
+            --glass-strong: rgba(16, 18, 32, 0.55);
             --line: rgba(255, 255, 255, 0.13);
             --radius: 22px;
             --font-title: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
@@ -29,7 +32,6 @@
         }
 
         html, body { height: 100%; overflow: hidden; }
-
         body {
             font-family: var(--font-body);
             color: var(--text);
@@ -37,31 +39,43 @@
             -webkit-font-smoothing: antialiased;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
+            transition: background 0.6s;
         }
+        button { font-family: inherit; touch-action: manipulation; }
 
-        /* ================================================================
-           背景层
-           ================================================================ */
+        /* ==================================================================
+           1. 背景与氛围层
+           ================================================================== */
         #bg {
             position: fixed; inset: 0; z-index: 0;
             background-size: cover; background-position: center;
             transition: opacity 0.8s var(--ease);
         }
+        #ambient { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+        #ambient .orb {
+            position: absolute; width: 52vmax; height: 52vmax; border-radius: 50%;
+            will-change: transform;
+        }
+        #ambient .orb-a { background: radial-gradient(circle at 35% 35%, var(--orb1), transparent 62%); top: -18vmax; left: -12vmax; animation: driftA 22s ease-in-out infinite alternate; }
+        #ambient .orb-b { background: radial-gradient(circle at 60% 40%, var(--orb2), transparent 62%); bottom: -20vmax; right: -12vmax; animation: driftB 26s ease-in-out infinite alternate; }
+        @keyframes driftA { from { transform: translate(0, 0) scale(1); } to { transform: translate(8vmax, 6vmax) scale(1.15); } }
+        @keyframes driftB { from { transform: translate(0, 0) scale(1.05); } to { transform: translate(-8vmax, -6vmax) scale(0.92); } }
+
         #bg-overlay {
             position: fixed; inset: 0; z-index: 1;
             background:
-                radial-gradient(120% 90% at 50% 0%, rgba(0, 0, 0, 0.16), transparent 60%),
-                linear-gradient(180deg, rgba(0, 0, 0, 0.24), rgba(0, 0, 0, 0.44));
+                radial-gradient(120% 90% at 50% 0%, rgba(0, 0, 0, 0.14), transparent 60%),
+                linear-gradient(180deg, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.46));
         }
         #particles { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
 
-        /* ================================================================
-           主界面
-           ================================================================ */
+        /* ==================================================================
+           2. 主界面
+           ================================================================== */
         #app {
             position: relative; z-index: 3; height: 100%;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
+            padding: 24px 20px calc(20px + env(safe-area-inset-bottom));
             animation: appIn 0.9s var(--ease) both;
         }
         @keyframes appIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
@@ -69,141 +83,179 @@
         .hero { text-align: center; }
         .title {
             font-family: var(--font-title);
-            font-size: clamp(40px, 9vw, 64px);
-            font-weight: 800; letter-spacing: 4px; line-height: 1.2;
+            font-size: clamp(38px, 8.5vw, 62px);
+            font-weight: 800; letter-spacing: 6px; line-height: 1.2;
             color: var(--primary);
-            text-shadow: 0 0 26px var(--glow), 0 6px 26px rgba(0, 0, 0, 0.45);
-            margin-bottom: 10px;
-            transition: all 0.5s var(--ease);
+            text-shadow: 0 0 30px var(--glow), 0 6px 26px rgba(0, 0, 0, 0.45);
+            margin-bottom: 8px;
+            transition: color 0.5s, text-shadow 0.5s, font-size 0.5s;
         }
         .subtitle {
             font-size: clamp(13px, 3vw, 16px);
-            color: var(--text-soft); letter-spacing: 5px;
-            margin-bottom: 26px;
-            transition: all 0.5s var(--ease);
+            color: var(--text-soft); letter-spacing: 4px;
+            margin-bottom: 22px;
+            transition: color 0.5s, opacity 0.5s;
         }
 
-        /* 状态 */
-        .status { display: flex; gap: 12px; margin-bottom: 22px; }
-        .status .chip {
-            display: flex; align-items: center; gap: 6px;
-            padding: 7px 16px;
+        /* 状态胶囊 */
+        .status { display: flex; gap: 12px; margin-bottom: 20px; }
+        .chip {
+            display: flex; align-items: center; gap: 5px;
+            padding: 8px 18px;
             background: var(--glass); border: 1px solid var(--line);
             border-radius: 999px; font-size: 13px; color: var(--text-soft);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             font-variant-numeric: tabular-nums;
+            transition: background 0.4s, border-color 0.4s;
         }
-        .status b { color: var(--primary); font-size: 17px; font-weight: 800; }
+        .chip b { color: var(--primary); font-size: 17px; font-weight: 800; }
 
         /* 抽奖框 */
         .lottery-box {
-            width: min(760px, 94vw); height: clamp(180px, 34vh, 250px);
+            width: min(720px, 94vw); height: clamp(170px, 32vh, 230px);
             display: flex; align-items: center; justify-content: center;
             position: relative; overflow: hidden;
             border-radius: var(--radius);
             background: var(--glass-strong);
             border: 1px solid var(--line);
             backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-            margin-bottom: 26px;
-            transition: box-shadow 0.5s var(--ease);
+            box-shadow: 0 22px 60px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            margin-bottom: 22px;
+            transition: box-shadow 0.5s, border-color 0.5s, background 0.5s;
         }
         .lottery-box::before {
             content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
             background: radial-gradient(120% 60% at 50% 0%, var(--glow), transparent 55%);
-            opacity: 0.32;
+            opacity: 0.30;
         }
-        .lottery-box.winner { box-shadow: 0 0 0 2px var(--primary), 0 0 60px var(--glow), 0 24px 70px rgba(0, 0, 0, 0.4); }
+        .lottery-box.winner { box-shadow: 0 0 0 2px var(--primary), 0 0 64px var(--glow), 0 24px 70px rgba(0, 0, 0, 0.4); }
 
         .slots { display: flex; gap: 14px; justify-content: center; align-items: center; width: 100%; padding: 0 20px; }
         .slot {
-            flex: 1 1 0; max-width: 210px; height: 80px;
+            flex: 1 1 0; max-width: 210px; height: 78px;
             display: flex; align-items: center; justify-content: center;
-            font-size: clamp(20px, 5.4vw, 34px); font-weight: 800; color: var(--text);
+            font-size: clamp(20px, 5.4vw, 32px); font-weight: 800; color: var(--text);
             background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); border-radius: 14px;
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
             transition: all 0.25s var(--ease);
         }
-        .slot.rolling { color: var(--text-soft); border-color: transparent; animation: flicker 0.09s infinite; }
+        .slot.rolling { color: var(--text-soft); border-color: transparent; animation: slotRoll 0.09s infinite; filter: blur(0.4px); }
         .slot.winner {
             color: var(--primary); border-color: var(--primary);
             background: rgba(255, 255, 255, 0.12);
-            box-shadow: 0 0 26px var(--glow);
-            animation: pop 0.6s var(--ease);
+            box-shadow: 0 0 28px var(--glow);
+            animation: pop 0.55s var(--ease) both;
+            animation-delay: calc(var(--i, 0) * 0.13s);
         }
-        @keyframes flicker { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+        @keyframes slotRoll {
+            0% { transform: translateY(9px); opacity: 0.35; }
+            50% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-9px); opacity: 0.35; }
+        }
         @keyframes pop {
             0% { transform: scale(0.3); opacity: 0; }
-            60% { transform: scale(1.15); }
+            60% { transform: scale(1.12); }
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* 抽奖按钮 */
+        /* 开奖按钮 + 进度环 */
+        .action { position: relative; margin-bottom: 14px; }
+        .ring { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+        .ring svg { transform: rotate(-90deg); }
+        .ring .ring-bg { fill: none; stroke: rgba(255, 255, 255, 0.10); stroke-width: 3.5; }
+        .ring .ring-fg {
+            fill: none; stroke: var(--primary); stroke-width: 3.5; stroke-linecap: round;
+            stroke-dasharray: 327; stroke-dashoffset: 327;
+            transition: stroke-dashoffset 0.6s var(--ease), stroke 0.5s;
+            filter: drop-shadow(0 0 6px var(--glow));
+        }
         .draw-btn {
             position: relative; overflow: hidden;
-            width: min(230px, 74vw); height: 62px;
+            width: min(220px, 70vw); height: 62px;
             border: none; cursor: pointer; border-radius: 999px;
             display: flex; align-items: center; justify-content: center; gap: 10px;
-            font-family: var(--font-title);
             font-size: clamp(16px, 4vw, 19px); font-weight: 800; letter-spacing: 4px;
             color: #fff; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
             background: var(--primary);
             box-shadow: 0 10px 34px var(--glow), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-            transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease), filter 0.3s var(--ease);
-            touch-action: manipulation;
+            transition: transform 0.3s var(--ease), box-shadow 0.3s, filter 0.3s, background 0.4s;
         }
         .draw-btn::after {
             content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 40%, rgba(0, 0, 0, 0.28));
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 40%, rgba(0, 0, 0, 0.26));
         }
         .draw-btn > * { position: relative; z-index: 1; }
+        .draw-btn .spin { display: inline-block; }
         .draw-btn:hover { transform: translateY(-3px); filter: brightness(1.06); box-shadow: 0 16px 46px var(--glow); }
         .draw-btn:active { transform: translateY(0) scale(0.97); }
-        .draw-btn.rolling {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-            box-shadow: 0 8px 30px rgba(255, 107, 107, 0.45);
-            animation: pulse 1s ease-in-out infinite;
-        }
-        .draw-btn.rolling::after { background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent 45%, rgba(0, 0, 0, 0.2)); }
+        .draw-btn.rolling { animation: pulse 1s ease-in-out infinite; }
+        .draw-btn.rolling .spin { animation: spin 0.9s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse {
-            0%, 100% { box-shadow: 0 8px 30px rgba(255, 107, 107, 0.45); }
-            50% { box-shadow: 0 8px 52px rgba(255, 107, 107, 0.75); }
+            0%, 100% { box-shadow: 0 10px 30px var(--glow), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
+            50% { box-shadow: 0 10px 52px var(--glow), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
         }
 
-        /* 历史记录 */
+        /* 人数步进 */
+        .stepper {
+            display: flex; align-items: center; gap: 2px;
+            background: var(--glass); border: 1px solid var(--line); border-radius: 999px;
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 4px;
+        }
+        .stepper button {
+            width: 34px; height: 34px; border: none; cursor: pointer; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08); color: var(--text-soft);
+            font-size: 18px; font-weight: 700; line-height: 1;
+            transition: all 0.2s;
+        }
+        .stepper button:hover { background: rgba(255, 255, 255, 0.18); color: #fff; }
+        .stepper .s-val {
+            min-width: 74px; text-align: center; font-size: 14px; color: var(--text-soft);
+            font-variant-numeric: tabular-nums;
+        }
+        .stepper .s-val b { color: var(--primary); font-size: 17px; font-weight: 800; }
+
+        /* 历史 */
         .history {
-            width: min(560px, 92vw); max-height: 110px; overflow-y: auto;
-            display: flex; flex-direction: column; gap: 6px;
-            scrollbar-width: none; margin-top: 4px;
+            width: min(560px, 92vw); max-height: 96px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 6px; margin-top: 12px;
+            scrollbar-width: none;
         }
         .history::-webkit-scrollbar { display: none; }
         .h-item {
             background: var(--glass); border: 1px solid var(--line);
-            padding: 7px 16px; border-radius: 12px;
+            padding: 6px 16px; border-radius: 12px;
             font-size: 13px; color: var(--text-soft); text-align: center;
             backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
             animation: fadeUp 0.5s var(--ease);
         }
         .h-item b { color: var(--primary); }
+        .h-empty { font-size: 12px; color: var(--text-faint); text-align: center; padding: 10px 0; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
-        /* 设置按钮 */
-        #settings-btn {
-            position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 50;
-            width: 48px; height: 48px; border: 1px solid var(--line); border-radius: 16px;
+        /* ==================================================================
+           3. 主界面快捷按钮
+           ================================================================== */
+        .float-btn {
+            width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 14px;
             background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            color: var(--text-soft); font-size: 20px; cursor: pointer;
+            color: var(--text-soft); font-size: 17px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.25s var(--ease);
-            touch-action: manipulation;
         }
-        #settings-btn:hover { transform: scale(1.08); background: rgba(255, 255, 255, 0.14); }
+        .float-btn:hover { transform: scale(1.08); background: rgba(255, 255, 255, 0.14); color: #fff; }
+        #settings-btn { position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 50; }
+        #quick {
+            position: fixed; left: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 50;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        #mute-btn.active { background: rgba(255, 120, 120, 0.18); color: #ff8080; }
 
-        /* 快捷键提示 */
         #shortcut-hint {
-            position: fixed; left: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 10;
-            font-size: 11px; color: var(--text-faint);
-            background: rgba(0, 0, 0, 0.3); padding: 7px 12px; border-radius: 999px;
+            position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%);
+            z-index: 10; font-size: 11px; color: var(--text-faint); white-space: nowrap;
+            background: rgba(0, 0, 0, 0.28); padding: 6px 12px; border-radius: 999px;
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         }
         #shortcut-hint kbd {
@@ -211,75 +263,120 @@
             font-family: ui-monospace, "Consolas", monospace; font-size: 10px;
         }
 
-        /* 音效提示 */
-        #audio-toast {
-            position: fixed; top: calc(16px + env(safe-area-inset-top)); left: 50%;
-            transform: translateX(-50%) translateY(-10px);
-            z-index: 100; background: rgba(10, 12, 22, 0.78); backdrop-filter: blur(14px);
-            color: #fff; padding: 9px 18px; border-radius: 999px; font-size: 13px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        /* ==================================================================
+           4. 全局 Toast
+           ================================================================== */
+        #toast {
+            position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(10px);
+            z-index: 120; background: rgba(12, 14, 26, 0.85); backdrop-filter: blur(14px);
+            color: #fff; padding: 10px 20px; border-radius: 999px; font-size: 13px;
+            border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             opacity: 0; pointer-events: none; white-space: nowrap;
-            transition: opacity 0.35s var(--ease), transform 0.35s var(--ease);
+            transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
         }
-        #audio-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* ================================================================
-           设置弹窗
-           ================================================================ */
-        #settings-overlay {
-            position: fixed; inset: 0; z-index: 200;
-            background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(8px);
+        /* ==================================================================
+           5. 开奖庆祝弹层
+           ================================================================== */
+        #celebrate {
+            position: fixed; inset: 0; z-index: 90;
             display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle at 50% 42%, rgba(0, 0, 0, 0.30), rgba(0, 0, 0, 0.68));
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
             opacity: 0; pointer-events: none;
-            transition: opacity 0.3s var(--ease);
+            transition: opacity 0.35s var(--ease);
         }
-        #settings-overlay.open { opacity: 1; pointer-events: auto; }
-
-        #settings-modal {
-            width: min(520px, 94vw); max-height: min(560px, 86vh);
-            display: flex; flex-direction: column; overflow: hidden;
-            background: rgba(16, 18, 30, 0.92); backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px;
-            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55);
-            transform: translateY(14px) scale(0.97); opacity: 0;
-            transition: transform 0.3s var(--ease), opacity 0.3s var(--ease);
+        #celebrate.show { opacity: 1; pointer-events: auto; }
+        .celebrate-inner {
+            text-align: center; position: relative;
+            transform: scale(0.6); opacity: 0;
+            transition: transform 0.55s var(--ease), opacity 0.55s var(--ease);
         }
-        #settings-overlay.open #settings-modal { transform: none; opacity: 1; }
+        #celebrate.show .celebrate-inner { transform: scale(1); opacity: 1; }
+        .celebrate-inner::before {
+            content: ""; position: absolute; inset: -70px -90px; border-radius: 50%;
+            background: radial-gradient(circle, var(--glow), transparent 65%);
+            animation: ringPulse 2.2s ease-out infinite;
+        }
+        @keyframes ringPulse { 0% { transform: scale(0.7); opacity: 0.9; } 100% { transform: scale(1.35); opacity: 0; } }
+        .celebrate-emoji { font-size: 68px; line-height: 1; animation: bouncy 0.9s var(--ease) infinite alternate; }
+        @keyframes bouncy { from { transform: translateY(-6px) scale(1); } to { transform: translateY(6px) scale(1.06); } }
+        .celebrate-inner h2 { font-size: clamp(26px, 7vw, 40px); color: var(--primary); margin: 6px 0 4px; text-shadow: 0 0 30px var(--glow); font-family: var(--font-title); letter-spacing: 6px; }
+        #celebrate-names { font-size: clamp(16px, 4.6vw, 24px); color: #fff; font-weight: 700; letter-spacing: 2px; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5); }
+        .celebrate-sub { font-size: 12px; color: var(--text-soft); margin-top: 6px; letter-spacing: 1px; }
 
-        #settings-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; }
-        #settings-header h2 { font-size: 16px; font-weight: 700; color: #fff; }
-        #settings-close {
-            width: 32px; height: 32px; border: none; border-radius: 10px;
+        /* 纸屑 */
+        .confetti { position: fixed; z-index: 100; pointer-events: none; animation: fall var(--dur, 3s) ease-out forwards; }
+        @keyframes fall {
+            0% { transform: translateY(-12vh) rotate(0) scale(1); opacity: 1; }
+            100% { transform: translateY(112vh) rotate(720deg) scale(0.3); opacity: 0; }
+        }
+        .streamer { position: fixed; z-index: 100; pointer-events: none; animation: streamerFall var(--dur, 3s) linear forwards; }
+        @keyframes streamerFall {
+            0% { transform: translateY(-12vh) rotate(0); opacity: 1; }
+            100% { transform: translateY(112vh) rotate(540deg); opacity: 0; }
+        }
+        .emoji-rain { position: fixed; z-index: 101; pointer-events: none; animation: fall var(--dur, 3s) ease-in forwards; }
+
+        /* ==================================================================
+           6. 设置抽屉
+           ================================================================== */
+        #drawer-overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(6px);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.35s var(--ease);
+        }
+        #drawer-overlay.show { opacity: 1; pointer-events: auto; }
+
+        #drawer {
+            position: fixed; top: 0; right: 0; bottom: 0; z-index: 210;
+            width: min(460px, 94vw);
+            background: rgba(13, 15, 26, 0.92);
+            backdrop-filter: blur(26px); -webkit-backdrop-filter: blur(26px);
+            border-left: 1px solid var(--line);
+            box-shadow: -30px 0 80px rgba(0, 0, 0, 0.5);
+            display: flex; flex-direction: column;
+            transform: translateX(105%);
+            transition: transform 0.45s var(--ease);
+        }
+        #drawer.open { transform: translateX(0); }
+
+        #drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 22px 12px; }
+        #drawer-header h2 { font-size: 17px; font-weight: 700; color: #fff; letter-spacing: 1px; }
+        #drawer-close {
+            width: 34px; height: 34px; border: none; border-radius: 11px;
             background: rgba(255, 255, 255, 0.08); color: var(--text-soft);
-            font-size: 14px; cursor: pointer;
+            font-size: 15px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.2s;
         }
-        #settings-close:hover { background: rgba(255, 100, 100, 0.2); color: #ff6b6b; }
+        #drawer-close:hover { background: rgba(255, 100, 100, 0.2); color: #ff6b6b; }
 
-        #settings-tabs {
-            display: flex; gap: 4px; padding: 0 14px 10px;
+        #drawer-tabs {
+            display: flex; gap: 4px; padding: 0 16px 12px;
             border-bottom: 1px solid var(--line);
             overflow-x: auto; scrollbar-width: none;
         }
-        #settings-tabs::-webkit-scrollbar { display: none; }
+        #drawer-tabs::-webkit-scrollbar { display: none; }
         .tab-btn {
-            padding: 9px 14px; border: none; background: transparent;
+            padding: 8px 13px; border: none; background: transparent;
             color: var(--text-faint); font-size: 13px; cursor: pointer;
             border-radius: 10px; white-space: nowrap;
-            transition: all 0.2s; font-family: inherit;
+            transition: all 0.2s;
         }
         .tab-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.06); }
         .tab-btn.active { color: var(--primary); background: rgba(255, 255, 255, 0.08); font-weight: 600; }
 
-        #settings-body {
-            flex: 1; overflow-y: auto; padding: 16px 20px calc(20px + env(safe-area-inset-bottom));
-            scrollbar-width: thin;
+        #drawer-body {
+            flex: 1; overflow-y: auto; padding: 16px 22px calc(24px + env(safe-area-inset-bottom));
+            overscroll-behavior: contain; scrollbar-width: thin;
         }
         .tab-panel { display: none; animation: fadeUp 0.3s var(--ease); }
         .tab-panel.active { display: block; }
 
-        .field { margin-bottom: 14px; }
+        .field { margin-bottom: 15px; }
         .field label { display: block; font-size: 12px; color: var(--text-faint); margin-bottom: 6px; letter-spacing: 0.5px; }
         .field input[type="text"],
         .field input[type="number"],
@@ -299,30 +396,45 @@
         .field-row { display: flex; gap: 10px; }
         .field-row > * { flex: 1; }
 
-        .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        /* 主题卡片 */
+        .theme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .theme-card {
-            aspect-ratio: 4 / 3; border-radius: 14px; cursor: pointer;
-            position: relative; overflow: hidden;
+            border-radius: 16px; cursor: pointer; position: relative; overflow: hidden;
             border: 2px solid transparent; background-size: cover; background-position: center;
+            aspect-ratio: 4 / 3;
             transition: all 0.25s var(--ease);
         }
         .theme-card::after {
             content: ""; position: absolute; inset: 0;
-            background: linear-gradient(180deg, transparent 45%, rgba(0, 0, 0, 0.55));
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 40%, rgba(0, 0, 0, 0.68));
         }
-        .theme-card:hover { transform: translateY(-3px); }
-        .theme-card.active { border-color: var(--primary); box-shadow: 0 0 18px var(--glow); }
+        .theme-card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4); }
+        .theme-card.active { border-color: var(--primary); box-shadow: 0 0 20px var(--glow); }
         .theme-card .t-name {
-            position: absolute; left: 0; right: 0; bottom: 6px; z-index: 1;
-            text-align: center; font-size: 11px; color: #fff; font-weight: 600;
-            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+            position: absolute; left: 12px; bottom: 10px; z-index: 1;
+            font-size: 14px; color: #fff; font-weight: 700; letter-spacing: 1px;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
         }
+        .theme-card .t-copy {
+            position: absolute; left: 12px; top: 10px; z-index: 1;
+            font-size: 10px; color: rgba(255, 255, 255, 0.85); max-width: 90%;
+            overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+            background: rgba(0, 0, 0, 0.35); padding: 3px 8px; border-radius: 999px;
+            backdrop-filter: blur(4px);
+        }
+        .theme-card .t-check {
+            position: absolute; right: 10px; top: 10px; z-index: 1;
+            width: 24px; height: 24px; border-radius: 50%;
+            background: var(--primary); color: #0b0c16; font-size: 13px; font-weight: 800;
+            display: none; align-items: center; justify-content: center;
+        }
+        .theme-card.active .t-check { display: flex; }
 
+        /* 按钮 */
         .btn {
             padding: 11px 14px; border: none; border-radius: 12px; cursor: pointer;
             font-size: 13px; font-weight: 600; font-family: inherit;
             transition: all 0.2s var(--ease);
-            touch-action: manipulation;
         }
         .btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
         .btn:active { transform: scale(0.97); }
@@ -331,106 +443,300 @@
         .btn-red { background: linear-gradient(135deg, #e05c50, #b3382e); color: #fff; }
         .btn-ghost { background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid var(--line); }
 
+        /* 记录页 */
+        .stats-card {
+            background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line);
+            border-radius: 14px; padding: 12px 14px; margin-bottom: 14px;
+        }
+        .stats-card h3 { font-size: 12px; color: var(--text-faint); margin-bottom: 8px; font-weight: 600; letter-spacing: 1px; }
+        .stats-row {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; color: var(--text-soft); padding: 4px 0;
+        }
+        .stats-row .medal { width: 22px; text-align: center; }
+        .stats-row .s-name { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .stats-row .s-bar { flex: 1.4; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+        .stats-row .s-bar i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--primary), var(--primary)); opacity: 0.9; transition: width 0.6s var(--ease); }
+        .stats-row .s-num { min-width: 20px; text-align: right; color: var(--primary); font-weight: 700; }
+        .stats-empty { font-size: 12px; color: var(--text-faint); text-align: center; padding: 8px 0; }
+
         #record-list {
-            font-size: 12px; background: rgba(255, 255, 255, 0.05);
+            font-size: 12px; background: rgba(255, 255, 255, 0.04);
             padding: 10px 12px; border-radius: 12px;
             max-height: 130px; overflow-y: auto;
             color: var(--text-soft); line-height: 1.9;
-            scrollbar-width: thin;
+            scrollbar-width: thin; border: 1px solid var(--line);
         }
         #record-list .empty { color: var(--text-faint); text-align: center; }
         #save-msg { font-size: 12px; color: var(--text-faint); margin-top: 12px; text-align: center; }
 
-        /* ================================================================
-           纸屑
-           ================================================================ */
-        .confetti { position: fixed; z-index: 100; pointer-events: none; animation: fall var(--dur, 3s) ease-out forwards; }
-        @keyframes fall {
-            0% { transform: translateY(-10vh) rotate(0) scale(1); opacity: 1; }
-            100% { transform: translateY(110vh) rotate(720deg) scale(0.3); opacity: 0; }
+        .audio-el { display: none; }
+
+        /* ==================================================================
+           7. 六套主题 · 独立设计
+           ================================================================== */
+
+        /* ---- 🏮 中国风 ---- */
+        .theme-chinese {
+            --primary: #ffb020;
+            --glow: rgba(255, 176, 32, 0.50);
+            --orb1: rgba(255, 59, 48, 0.30);
+            --orb2: rgba(255, 176, 32, 0.22);
+            --glass-strong: rgba(40, 8, 8, 0.55);
+            --font-title: "Kaiti SC", "STKaiti", "KaiTi", "SimSun", serif;
+            --font-body: "SimSun", "STSong", "Microsoft YaHei", serif;
         }
-
-        /* ================================================================
-           各主题：色彩与字体
-           ================================================================ */
-        .theme-chinese { --primary: #ff3b30; --glow: rgba(255, 59, 48, 0.45); --font-title: "Kaiti SC", "STKaiti", "KaiTi", "SimSun", serif; --font-body: "SimSun", "STSong", serif; }
-        .theme-tech { --primary: #3fe0ff; --glow: rgba(63, 224, 255, 0.45); --font-title: "Consolas", "Courier New", monospace; --font-body: "Consolas", monospace; }
-        .theme-luxury { --primary: #ffd700; --glow: rgba(255, 215, 0, 0.45); --font-title: "Georgia", "Times New Roman", serif; --font-body: "Georgia", serif; }
-        .theme-beauty { --primary: #ff7eb6; --glow: rgba(255, 126, 182, 0.45); --font-title: "Comic Sans MS", "Segoe Print", cursive; --font-body: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
-        .theme-finance { --primary: #ffd84d; --glow: rgba(255, 216, 77, 0.4); --font-title: "Arial", "Helvetica", sans-serif; --font-body: "Arial", "PingFang SC", sans-serif; }
-        .theme-lifestyle { --primary: #ffa94d; --glow: rgba(255, 169, 77, 0.45); --font-title: "Segoe Print", "Comic Sans MS", cursive; --font-body: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
-
-        /* ================================================================
-           各主题：装饰元素
-           ================================================================ */
+        .theme-chinese .title { color: #ff4d3d; text-shadow: 0 0 34px rgba(255, 77, 61, 0.55), 0 6px 24px rgba(0, 0, 0, 0.5); }
+        .theme-chinese .subtitle { letter-spacing: 6px; }
+        .theme-chinese .lottery-box {
+            border-radius: 8px; border: 1px solid rgba(255, 176, 32, 0.35);
+            background: linear-gradient(180deg, rgba(110, 12, 12, 0.30), rgba(50, 0, 0, 0.42));
+            box-shadow: 0 22px 60px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 176, 32, 0.12);
+        }
+        .theme-chinese .lottery-box::before { opacity: 0.5; }
+        .theme-chinese .slot {
+            border-radius: 8px; font-family: var(--font-title);
+            background: rgba(255, 235, 210, 0.07); border: 1px solid rgba(255, 200, 120, 0.28);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+        .theme-chinese .slot.winner { color: #ffb020; border-color: #ffb020; background: rgba(255, 176, 32, 0.16); box-shadow: 0 0 26px rgba(255, 176, 32, 0.4); }
+        .theme-chinese .draw-btn {
+            border-radius: 12px; letter-spacing: 8px; font-family: var(--font-title);
+            background: linear-gradient(165deg, #ff5b4d, #c62828);
+            box-shadow: 0 12px 36px rgba(198, 40, 40, 0.5), inset 0 0 0 2px rgba(255, 176, 32, 0.6), inset 0 0 0 4px rgba(255, 255, 255, 0.12), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+        }
+        .theme-chinese .draw-btn::after { background: linear-gradient(160deg, rgba(255, 255, 255, 0.22), transparent 45%, rgba(0, 0, 0, 0.2)); }
+        .theme-chinese .chip { background: rgba(120, 20, 10, 0.3); border-color: rgba(255, 176, 32, 0.25); }
+        .theme-chinese .stepper, .theme-chinese .float-btn { background: rgba(120, 20, 10, 0.35); border-color: rgba(255, 176, 32, 0.25); }
+        .theme-chinese .h-item { background: rgba(120, 20, 10, 0.28); }
         .theme-chinese .deco-left, .theme-chinese .deco-right {
             position: fixed; top: 50%; transform: translateY(-50%); z-index: 2;
-            font-size: 64px; opacity: 0.18; pointer-events: none;
-            filter: drop-shadow(0 0 24px rgba(255, 60, 60, 0.6));
+            font-size: 60px; opacity: 0.22; pointer-events: none;
+            filter: drop-shadow(0 0 20px rgba(255, 80, 50, 0.7));
         }
-        .theme-chinese .deco-left { left: 24px; }
-        .theme-chinese .deco-right { right: 24px; }
+        .theme-chinese .deco-left { left: 22px; animation: sway 4s ease-in-out infinite; }
+        .theme-chinese .deco-right { right: 22px; animation: sway 4s ease-in-out infinite reverse; }
+        .theme-chinese .medallion {
+            position: fixed; top: 22px; left: 50%; transform: translateX(-50%); z-index: 2;
+            font-size: 34px; opacity: 0.5; pointer-events: none;
+            animation: medSpin 12s linear infinite;
+        }
+        @keyframes medSpin { to { transform: translateX(-50%) rotate(360deg); } }
 
-        .theme-tech .hud-corner {
-            position: fixed; width: 54px; height: 54px; z-index: 2;
-            border: 2px solid var(--glow); opacity: 0.5; pointer-events: none;
+        /* ---- ⚡ 科技感 ---- */
+        .theme-tech {
+            --primary: #22d3ee;
+            --glow: rgba(34, 211, 238, 0.50);
+            --orb1: rgba(34, 211, 238, 0.20);
+            --orb2: rgba(99, 102, 241, 0.18);
+            --glass-strong: rgba(3, 20, 40, 0.60);
+            --font-title: "Consolas", "Courier New", monospace;
+            --font-body: "Consolas", "Microsoft YaHei", monospace;
         }
+        .theme-tech .title { color: #22d3ee; text-shadow: 0 0 26px rgba(34, 211, 238, 0.7), 0 0 60px rgba(34, 211, 238, 0.4), 0 6px 24px rgba(0, 0, 0, 0.5); letter-spacing: 4px; text-transform: uppercase; }
+        .theme-tech .subtitle { letter-spacing: 3px; font-family: monospace; opacity: 0.75; text-transform: uppercase; }
+        .theme-tech .lottery-box {
+            border-radius: 0; border: 1px solid rgba(34, 211, 238, 0.35);
+            background: rgba(3, 20, 40, 0.60);
+            clip-path: polygon(0 14px, 14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px));
+        }
+        .theme-tech .lottery-box::after {
+            content: ""; position: absolute; left: 0; right: 0; height: 2px; pointer-events: none;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            animation: scan 3.4s linear infinite;
+        }
+        @keyframes scan { 0% { top: 0; opacity: 0; } 12% { opacity: 0.9; } 88% { opacity: 0.9; } 100% { top: 100%; opacity: 0; } }
+        .theme-tech .slot {
+            border-radius: 0; font-family: var(--font-title); text-transform: uppercase;
+            background: rgba(8, 40, 70, 0.35); border: 1px solid rgba(34, 211, 238, 0.25);
+            clip-path: polygon(0 7px, 7px 0, calc(100% - 7px) 0, 100% 7px, 100% calc(100% - 7px), calc(100% - 7px) 100%, 7px 100%, 0 calc(100% - 7px));
+        }
+        .theme-tech .slot.winner { color: #22d3ee; border-color: #22d3ee; background: rgba(34, 211, 238, 0.15); box-shadow: 0 0 30px rgba(34, 211, 238, 0.5), inset 0 0 14px rgba(34, 211, 238, 0.2); }
+        .theme-tech .draw-btn {
+            border-radius: 0; letter-spacing: 3px; text-transform: uppercase; font-family: var(--font-title);
+            background: linear-gradient(135deg, #22d3ee, #0e7490);
+            clip-path: polygon(0 12px, 12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px));
+            box-shadow: 0 0 26px rgba(34, 211, 238, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        }
+        .theme-tech .draw-btn::after { background: linear-gradient(120deg, rgba(255, 255, 255, 0.18), transparent 50%, rgba(0, 0, 0, 0.25)); }
+        .theme-tech .chip { border-radius: 4px; font-family: var(--font-body); }
+        .theme-tech .stepper, .theme-tech .float-btn { border-radius: 6px; background: rgba(8, 40, 70, 0.4); }
+        .theme-tech .hud-corner { position: fixed; width: 52px; height: 52px; z-index: 2; border: 2px solid var(--glow); opacity: 0.6; pointer-events: none; }
         .theme-tech .hud-tl { top: 18px; left: 18px; border-right: none; border-bottom: none; }
         .theme-tech .hud-tr { top: 18px; right: 18px; border-left: none; border-bottom: none; }
         .theme-tech .hud-bl { bottom: 18px; left: 18px; border-right: none; border-top: none; }
         .theme-tech .hud-br { bottom: 18px; right: 18px; border-left: none; border-top: none; }
 
-        .theme-luxury .gold-line {
-            position: fixed; height: 1px; z-index: 2; pointer-events: none;
-            background: linear-gradient(90deg, transparent, var(--primary), transparent);
-            opacity: 0.5;
+        /* ---- 👑 黑金奢华 ---- */
+        .theme-luxury {
+            --primary: #d9b45c;
+            --glow: rgba(217, 180, 92, 0.45);
+            --orb1: rgba(217, 180, 92, 0.16);
+            --orb2: rgba(120, 90, 40, 0.14);
+            --glass-strong: rgba(8, 8, 14, 0.60);
+            --font-title: "Georgia", "Times New Roman", "STSong", serif;
+            --font-body: "Georgia", "PingFang SC", serif;
         }
-        .theme-luxury .gold-line-top { top: 42px; left: 8%; right: 8%; }
-        .theme-luxury .gold-line-bottom { bottom: 42px; left: 8%; right: 8%; }
+        .theme-luxury .title { color: #e8cf96; letter-spacing: 10px; font-weight: 400; text-shadow: 0 0 40px rgba(217, 180, 92, 0.4), 0 3px 14px rgba(0, 0, 0, 0.6); }
+        .theme-luxury .subtitle { font-style: italic; letter-spacing: 5px; opacity: 0.6; }
+        .theme-luxury .lottery-box {
+            border-radius: 4px; border: 1px solid rgba(217, 180, 92, 0.35);
+            background: linear-gradient(180deg, rgba(20, 16, 8, 0.5), rgba(8, 8, 12, 0.55));
+            box-shadow: 0 22px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 235, 190, 0.1);
+        }
+        .theme-luxury .lottery-box::before { opacity: 0.22; }
+        .theme-luxury .slot {
+            border-radius: 3px; font-family: var(--font-title); font-weight: 400;
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(217, 180, 92, 0.22);
+            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.5);
+        }
+        .theme-luxury .slot.winner { color: #e8cf96; border-color: #d9b45c; background: rgba(217, 180, 92, 0.12); box-shadow: 0 0 30px rgba(217, 180, 92, 0.4); }
+        .theme-luxury .draw-btn {
+            border-radius: 999px; letter-spacing: 6px; font-family: var(--font-title); font-weight: 400;
+            background: transparent; color: #e8cf96;
+            border: 1px solid rgba(217, 180, 92, 0.7);
+            box-shadow: inset 0 0 20px rgba(217, 180, 92, 0.12);
+        }
+        .theme-luxury .draw-btn::after { background: none; }
+        .theme-luxury .draw-btn:hover { background: linear-gradient(135deg, #d9b45c, #a8842f); color: #0b0b0f; text-shadow: none; border-color: transparent; }
+        .theme-luxury .draw-btn.rolling { background: linear-gradient(135deg, #d9b45c, #a8842f); color: #0b0b0f; text-shadow: none; }
+        .theme-luxury .chip { border-radius: 3px; background: rgba(10, 10, 16, 0.4); }
+        .theme-luxury .stepper, .theme-luxury .float-btn { border-radius: 8px; background: rgba(10, 10, 16, 0.4); }
+        .theme-luxury .gold-line { position: fixed; height: 1px; z-index: 2; pointer-events: none; background: linear-gradient(90deg, transparent, rgba(217, 180, 92, 0.6), transparent); opacity: 0.6; }
+        .theme-luxury .gold-line-top { top: 40px; left: 6%; right: 6%; }
+        .theme-luxury .gold-line-bottom { bottom: 40px; left: 6%; right: 6%; }
+        .theme-luxury .g-corner { position: fixed; width: 26px; height: 26px; z-index: 2; pointer-events: none; border: 1px solid rgba(217, 180, 92, 0.5); }
+        .theme-luxury .g-tl { top: 52px; left: 5%; border-right: none; border-bottom: none; }
+        .theme-luxury .g-tr { top: 52px; right: 5%; border-left: none; border-bottom: none; }
+        .theme-luxury .g-bl { bottom: 52px; left: 5%; border-right: none; border-top: none; }
+        .theme-luxury .g-br { bottom: 52px; right: 5%; border-left: none; border-top: none; }
 
-        .theme-beauty .petal { position: fixed; font-size: 24px; opacity: 0.2; z-index: 2; pointer-events: none; animation: float 6s ease-in-out infinite; }
-        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-20px) rotate(10deg); } }
+        /* ---- 💄 美妆风 ---- */
+        .theme-beauty {
+            --primary: #ff8fc4;
+            --glow: rgba(255, 143, 196, 0.50);
+            --orb1: rgba(255, 143, 196, 0.24);
+            --orb2: rgba(167, 139, 250, 0.20);
+            --glass-strong: rgba(40, 16, 34, 0.52);
+            --font-title: "Comic Sans MS", "Segoe Print", "STKaiti", cursive;
+            --font-body: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        .theme-beauty .title { color: #ff8fc4; text-shadow: 0 0 34px rgba(255, 143, 196, 0.55), 0 6px 24px rgba(0, 0, 0, 0.4); letter-spacing: 3px; }
+        .theme-beauty .subtitle { color: rgba(255, 230, 240, 0.8); }
+        .theme-beauty .lottery-box { border-radius: 28px; border: 1px solid rgba(255, 143, 196, 0.35); background: linear-gradient(180deg, rgba(255, 182, 215, 0.16), rgba(40, 16, 34, 0.5)); }
+        .theme-beauty .slot { border-radius: 18px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 143, 196, 0.28); }
+        .theme-beauty .slot.winner { color: #ff9acb; border-color: #ff8fc4; background: rgba(255, 143, 196, 0.2); box-shadow: 0 0 30px rgba(255, 143, 196, 0.5); }
+        .theme-beauty .draw-btn {
+            border-radius: 999px; letter-spacing: 3px;
+            background: linear-gradient(135deg, #ffb3d5, #ff7eb6);
+            box-shadow: 0 14px 40px rgba(255, 126, 182, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.6), inset 0 -6px 14px rgba(255, 255, 255, 0.25);
+        }
+        .theme-beauty .draw-btn::after { background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 45%); }
+        .theme-beauty .draw-btn:hover { transform: translateY(-4px) scale(1.03); }
+        .theme-beauty .chip { background: rgba(255, 200, 225, 0.12); border-color: rgba(255, 143, 196, 0.3); }
+        .theme-beauty .stepper, .theme-beauty .float-btn { background: rgba(255, 200, 225, 0.14); border-color: rgba(255, 143, 196, 0.3); border-radius: 14px; }
+        .theme-beauty .h-item { background: rgba(255, 200, 225, 0.1); }
+        .theme-beauty .petal { position: fixed; font-size: 22px; opacity: 0.24; z-index: 2; pointer-events: none; animation: float 6s ease-in-out infinite; }
+        .theme-beauty .sparkle { position: fixed; font-size: 16px; opacity: 0.3; z-index: 2; pointer-events: none; animation: twinkle 2.6s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-24px) rotate(12deg); } }
+        @keyframes twinkle { 0%, 100% { opacity: 0.15; transform: scale(0.8); } 50% { opacity: 0.5; transform: scale(1.15); } }
 
-        .theme-finance .grid-line { position: fixed; background: var(--glow); z-index: 2; pointer-events: none; opacity: 0.3; }
+        /* ---- 💰 金融风 ---- */
+        .theme-finance {
+            --primary: #ffd84d;
+            --glow: rgba(255, 216, 77, 0.42);
+            --orb1: rgba(255, 216, 77, 0.16);
+            --orb2: rgba(56, 189, 248, 0.12);
+            --glass-strong: rgba(6, 18, 44, 0.60);
+            --font-title: "Arial", "Helvetica", "PingFang SC", sans-serif;
+            --font-body: "Arial", "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        .theme-finance .title { color: #ffd84d; letter-spacing: 4px; text-shadow: 0 0 26px rgba(255, 216, 77, 0.4), 0 4px 18px rgba(0, 0, 0, 0.5); }
+        .theme-finance .subtitle { font-weight: 600; }
+        .theme-finance .lottery-box {
+            border-radius: 10px; border: 1px solid rgba(255, 216, 77, 0.28);
+            background: linear-gradient(180deg, rgba(8, 26, 60, 0.5), rgba(4, 12, 30, 0.6));
+            box-shadow: 0 22px 60px rgba(0, 0, 0, 0.4);
+        }
+        .theme-finance .lottery-box::before { opacity: 0.16; }
+        .theme-finance .slot {
+            border-radius: 8px; font-family: var(--font-title); font-weight: 700;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 216, 77, 0.22);
+        }
+        .theme-finance .slot.winner { color: #ffd84d; border-color: #ffd84d; background: rgba(255, 216, 77, 0.14); box-shadow: 0 0 26px rgba(255, 216, 77, 0.35); }
+        .theme-finance .draw-btn {
+            border-radius: 10px; letter-spacing: 3px; font-weight: 900;
+            background: linear-gradient(135deg, #ffe066, #d4a017);
+            color: #0a1f44; text-shadow: none;
+            box-shadow: 0 12px 36px rgba(212, 160, 23, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+        .theme-finance .draw-btn::after { background: linear-gradient(135deg, rgba(255, 255, 255, 0.45), transparent 40%, rgba(0, 0, 0, 0.2)); }
+        .theme-finance .chip { border-radius: 6px; background: rgba(6, 20, 48, 0.5); font-weight: 600; }
+        .theme-finance .stepper, .theme-finance .float-btn { border-radius: 8px; background: rgba(6, 20, 48, 0.5); }
+        .theme-finance .grid-line { position: fixed; background: rgba(255, 216, 77, 0.08); z-index: 2; pointer-events: none; }
         .theme-finance .grid-v { width: 1px; top: 0; bottom: 0; }
         .theme-finance .grid-h { height: 1px; left: 0; right: 0; }
 
-        .theme-lifestyle .leaf { position: fixed; font-size: 20px; opacity: 0.16; z-index: 2; pointer-events: none; animation: sway 5s ease-in-out infinite; }
-        @keyframes sway { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+        /* ---- 🏡 生活风 ---- */
+        .theme-lifestyle {
+            --primary: #ff9f43;
+            --glow: rgba(255, 159, 67, 0.48);
+            --orb1: rgba(255, 159, 67, 0.24);
+            --orb2: rgba(255, 190, 120, 0.18);
+            --glass-strong: rgba(46, 26, 10, 0.5);
+            --font-title: "Segoe Print", "Comic Sans MS", "STKaiti", cursive;
+            --font-body: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        .theme-lifestyle .title { color: #ffb25e; text-shadow: 0 0 30px rgba(255, 159, 67, 0.5), 0 6px 22px rgba(0, 0, 0, 0.4); letter-spacing: 2px; }
+        .theme-lifestyle .lottery-box { border-radius: 24px; border: 2px dashed rgba(255, 159, 67, 0.35); background: linear-gradient(180deg, rgba(255, 200, 130, 0.14), rgba(46, 26, 10, 0.5)); }
+        .theme-lifestyle .slot { border-radius: 14px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 159, 67, 0.28); }
+        .theme-lifestyle .slot.winner { color: #ffb25e; border-color: #ff9f43; background: rgba(255, 159, 67, 0.18); box-shadow: 0 0 28px rgba(255, 159, 67, 0.45); }
+        .theme-lifestyle .draw-btn {
+            border-radius: 18px; letter-spacing: 2px;
+            background: linear-gradient(135deg, #ffb070, #ff8c42);
+            box-shadow: 0 12px 36px rgba(255, 140, 66, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.35);
+        }
+        .theme-lifestyle .draw-btn::after { background: linear-gradient(160deg, rgba(255, 255, 255, 0.3), transparent 45%, rgba(0, 0, 0, 0.18)); }
+        .theme-lifestyle .chip { background: rgba(255, 190, 120, 0.12); border-color: rgba(255, 159, 67, 0.3); }
+        .theme-lifestyle .stepper, .theme-lifestyle .float-btn { background: rgba(255, 190, 120, 0.12); border-color: rgba(255, 159, 67, 0.3); }
+        .theme-lifestyle .leaf { position: fixed; font-size: 20px; opacity: 0.2; z-index: 2; pointer-events: none; animation: sway 5s ease-in-out infinite; }
+        @keyframes sway { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
 
-        /* ================================================================
-           移动端适配
-           ================================================================ */
+        /* ==================================================================
+           8. 移动端适配
+           ================================================================== */
         @media (max-width: 768px) {
             html, body { overflow-y: auto; }
             #app {
                 height: auto; min-height: 100dvh;
                 justify-content: flex-start;
                 padding-top: max(30px, env(safe-area-inset-top));
-                padding-bottom: calc(30px + env(safe-area-inset-bottom));
+                padding-bottom: calc(96px + env(safe-area-inset-bottom));
             }
-            .title { font-size: clamp(26px, 8.5vw, 40px) !important; letter-spacing: 2px; }
+            .title { font-size: clamp(26px, 8.5vw, 40px) !important; letter-spacing: 3px; }
             .subtitle { letter-spacing: 3px; margin-bottom: 18px; }
             .status { margin-bottom: 16px; }
 
-            .lottery-box { height: auto; min-height: 150px; padding: 16px 10px; margin-bottom: 18px; }
+            .lottery-box { height: auto; min-height: 148px; padding: 16px 10px; margin-bottom: 18px; }
             .slots { flex-wrap: wrap; gap: 8px; padding: 0 6px; }
             .slot { flex: 1 1 0; min-width: 68px; max-width: none; height: 52px; font-size: clamp(14px, 4.4vw, 19px); border-radius: 12px; }
 
-            .draw-btn { height: 54px; }
-            .history { max-height: 120px; }
+            .draw-btn { height: 56px; }
+            .history { max-height: 110px; }
 
-            #settings-modal {
-                width: 100vw; max-width: none; height: 100dvh; max-height: 100dvh;
-                border-radius: 0; border: none;
-            }
-            .theme-grid { grid-template-columns: repeat(2, 1fr); }
+            #settings-btn, #quick { bottom: calc(16px + env(safe-area-inset-bottom)); }
             #shortcut-hint { display: none; }
-            #settings-btn { width: 46px; height: 46px; }
+            #toast { bottom: calc(90px + env(safe-area-inset-bottom)); }
 
-            .theme-chinese .deco-left, .theme-chinese .deco-right,
+            #drawer { width: 100vw; border-left: none; box-shadow: none; }
+            #celebrate { padding: 20px; }
+
+            .theme-chinese .deco-left, .theme-chinese .deco-right, .theme-chinese .medallion,
             .theme-tech .hud-corner,
-            .theme-luxury .gold-line { display: none; }
+            .theme-luxury .gold-line, .theme-luxury .g-corner, .theme-luxury .medallion,
+            .theme-beauty .petal, .theme-beauty .sparkle,
+            .theme-finance .grid-line,
+            .theme-lifestyle .leaf { display: none; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -445,157 +751,647 @@
 <body>
 
 <div id="bg" aria-hidden="true"></div>
+<div id="ambient" aria-hidden="true"><div class="orb orb-a"></div><div class="orb orb-b"></div></div>
 <div id="bg-overlay" aria-hidden="true"></div>
 <canvas id="particles" aria-hidden="true"></canvas>
 <div id="theme-decorations" aria-hidden="true"></div>
 
-<div id="audio-toast" role="status" aria-live="polite"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 
 <!-- 主界面 -->
 <main id="app">
     <header class="hero">
-        <h1 class="title" id="title">🎊 年度盛典大抽奖</h1>
-        <p class="subtitle" id="subtitle">愿此刻的好运，落向闪光的你</p>
+        <h1 class="title" id="title">抽奖系统</h1>
+        <p class="subtitle" id="subtitle"></p>
     </header>
 
     <section class="status" aria-label="抽奖进度">
-        <div class="chip">还有 <b id="remain">0</b> 位伙伴待揭晓</div>
-        <div class="chip">已开奖 <b id="rounds">0</b> 轮</div>
+        <div class="chip" id="remain-chip"></div>
+        <div class="chip" id="rounds-chip"></div>
     </section>
 
     <section class="lottery-box" id="lottery-box" aria-live="polite">
         <div class="slots" id="slots"></div>
     </section>
 
-    <button class="draw-btn" id="draw-btn">
-        <span id="btn-icon">🎁</span>
-        <span id="btn-text">开始抽奖</span>
-    </button>
+    <div class="action">
+        <div class="ring" aria-hidden="true">
+            <svg width="126" height="126" viewBox="0 0 126 126">
+                <circle class="ring-bg" cx="63" cy="63" r="52"></circle>
+                <circle class="ring-fg" id="ring-fg" cx="63" cy="63" r="52"></circle>
+            </svg>
+        </div>
+        <button class="draw-btn" id="draw-btn">
+            <span class="spin" id="btn-spin">🎁</span>
+            <span id="btn-text">开始抽奖</span>
+        </button>
+    </div>
+
+    <div class="stepper" aria-label="每次开奖人数">
+        <button id="count-minus" aria-label="减少人数">−</button>
+        <div class="s-val">每次 <b id="count-val">1</b> 人</div>
+        <button id="count-plus" aria-label="增加人数">+</button>
+    </div>
 
     <section class="history" id="history" aria-label="中奖记录"></section>
 </main>
 
-<button id="settings-btn" aria-label="设置">⚙️</button>
-
-<div id="shortcut-hint">
-    <kbd>空格</kbd> 开奖 &nbsp;<kbd>F</kbd> 全屏 &nbsp;<kbd>Esc</kbd> 设置
+<!-- 主界面快捷按钮 -->
+<button class="float-btn" id="settings-btn" aria-label="设置">⚙️</button>
+<div id="quick">
+    <button class="float-btn" id="mute-btn" aria-label="静音开关">🔊</button>
+    <button class="float-btn" id="fullscreen-btn" aria-label="全屏">⛶</button>
 </div>
 
-<!-- 设置弹窗 -->
-<div id="settings-overlay" role="dialog" aria-modal="true" aria-label="设置">
-    <div id="settings-modal">
-        <header id="settings-header">
-            <h2>⚙️ 设置</h2>
-            <button id="settings-close" aria-label="关闭">✕</button>
-        </header>
-        <nav id="settings-tabs">
-            <button class="tab-btn active" data-tab="theme">🎨 主题</button>
-            <button class="tab-btn" data-tab="title">📌 标题</button>
-            <button class="tab-btn" data-tab="sound">🎵 音效</button>
-            <button class="tab-btn" data-tab="names">📋 名单</button>
-            <button class="tab-btn" data-tab="records">📜 记录</button>
-            <button class="tab-btn" data-tab="storage">💾 存储</button>
-        </nav>
-        <div id="settings-body">
-            <div class="tab-panel active" id="tab-theme">
-                <div class="field">
-                    <label>挑一种喜欢的氛围吧</label>
-                    <div class="theme-grid" id="theme-grid"></div>
-                </div>
-            </div>
-            <div class="tab-panel" id="tab-title">
-                <div class="field"><label>主标题</label><input type="text" id="in-title" value="🎊 年度盛典大抽奖"></div>
-                <div class="field"><label>副标题</label><input type="text" id="in-subtitle" value="愿此刻的好运，落向闪光的你"></div>
-                <div class="field"><label>标题大小</label><input type="number" id="in-size" value="56"></div>
-                <div class="field"><label>按钮图标</label>
-                    <select id="in-icon">
-                        <option value="🎁">🎁 礼物</option>
-                        <option value="🔥">🔥 火热</option>
-                        <option value="⭐">⭐ 星星</option>
-                        <option value="🏆">🏆 奖杯</option>
-                        <option value="💎">💎 钻石</option>
-                        <option value="🧧">🧧 红包</option>
-                    </select>
-                </div>
-            </div>
-            <div class="tab-panel" id="tab-sound">
-                <div class="field"><label>抽奖音乐（与 index.html 同目录）</label><input type="text" id="in-music-roll" value="音乐1.mp3"></div>
-                <div class="field"><label>中奖音乐（与 index.html 同目录）</label><input type="text" id="in-music-win" value="音乐2.mp3"></div>
-                <div class="field"><label>抽奖音量</label><input type="range" id="in-vol-roll" min="0" max="1" step="0.1" value="0.6"></div>
-                <div class="field"><label>中奖音量</label><input type="range" id="in-vol-win" min="0" max="1" step="0.1" value="0.8"></div>
-                <div class="field"><label>纸屑特效</label>
-                    <select id="in-confetti">
-                        <option value="on">开启 🎉</option>
-                        <option value="off">关闭</option>
-                    </select>
-                </div>
-                <div class="field"><div class="hint">把 mp3 文件放在 index.html 同目录即可使用自定义音乐</div></div>
-            </div>
-            <div class="tab-panel" id="tab-names">
-                <div class="field"><label>每次开奖人数</label><input type="number" id="in-count" value="1" min="1" max="10"></div>
-                <div class="field"><label>参与者名单（用逗号或换行分隔）</label>
-                    <textarea id="in-names" rows="5">陈明,王强,李芳,张伟,赵敏,孙杰,周涛,吴磊,郑洁,冯平,褚卫,卫华,蒋云,沈霞,韩梅,杨立,朱勇,秦丽,尤文,许博</textarea>
-                </div>
-                <div class="field-row">
-                    <button class="btn btn-green" id="btn-apply">✓ 应用名单</button>
-                </div>
-            </div>
-            <div class="tab-panel" id="tab-records">
-                <div class="field"><label>中奖记录</label><div id="record-list"></div></div>
-                <div class="field-row">
-                    <button class="btn btn-ghost" id="btn-export">📋 复制</button>
-                    <button class="btn btn-red" id="btn-reset">⟳ 重置</button>
-                </div>
-            </div>
-            <div class="tab-panel" id="tab-storage">
-                <div class="field-row">
-                    <button class="btn btn-gold" id="btn-save">💾 保存</button>
-                    <button class="btn btn-ghost" id="btn-clear">🗑️ 清除</button>
-                </div>
-                <div id="save-msg">设置会保存在浏览器里</div>
-            </div>
-        </div>
+<div id="shortcut-hint">
+    <kbd>空格</kbd> 开奖 &nbsp;<kbd>F</kbd> 全屏 &nbsp;<kbd>Esc</kbd> 设置 &nbsp;<kbd>M</kbd> 静音
+</div>
+
+<!-- 开奖庆祝弹层 -->
+<div id="celebrate" aria-hidden="true">
+    <div class="celebrate-inner">
+        <div class="celebrate-emoji">🎉</div>
+        <h2>恭喜</h2>
+        <p id="celebrate-names"></p>
+        <p class="celebrate-sub">好运已经落定，把它带回家吧</p>
     </div>
 </div>
 
-<audio id="audio-roll" loop preload="auto"></audio>
-<audio id="audio-win" preload="auto"></audio>
+<!-- 设置抽屉 -->
+<div id="drawer-overlay"></div>
+<aside id="drawer" role="dialog" aria-modal="true" aria-label="设置">
+    <header id="drawer-header">
+        <h2>⚙️ 设置</h2>
+        <button id="drawer-close" aria-label="关闭">✕</button>
+    </header>
+    <nav id="drawer-tabs">
+        <button class="tab-btn active" data-tab="theme">🎨 主题</button>
+        <button class="tab-btn" data-tab="title">📌 标题</button>
+        <button class="tab-btn" data-tab="sound">🎵 音效</button>
+        <button class="tab-btn" data-tab="names">📋 名单</button>
+        <button class="tab-btn" data-tab="records">📜 记录</button>
+        <button class="tab-btn" data-tab="storage">💾 存储</button>
+    </nav>
+    <div id="drawer-body">
+        <div class="tab-panel active" id="tab-theme">
+            <div class="field">
+                <label>挑一种喜欢的氛围吧，每种都有独立设计</label>
+                <div class="theme-grid" id="theme-grid"></div>
+            </div>
+        </div>
+        <div class="tab-panel" id="tab-title">
+            <div class="field"><label>主标题</label><input type="text" id="in-title" value="抽奖系统"></div>
+            <div class="field"><label>副标题</label><input type="text" id="in-subtitle" value="愿此刻的好运，落向闪光的你"></div>
+            <div class="field"><label>标题大小</label><input type="number" id="in-size" value="56" min="20" max="120"></div>
+            <div class="field"><label>按钮图标</label>
+                <select id="in-icon">
+                    <option value="🎁">🎁 礼物</option>
+                    <option value="🔥">🔥 火热</option>
+                    <option value="⭐">⭐ 星星</option>
+                    <option value="🏆">🏆 奖杯</option>
+                    <option value="💎">💎 钻石</option>
+                    <option value="🧧">🧧 红包</option>
+                    <option value="🍀">🍀 四叶草</option>
+                </select>
+            </div>
+        </div>
+        <div class="tab-panel" id="tab-sound">
+            <div class="field"><label>抽奖音乐（与 index.html 同目录）</label><input type="text" id="in-music-roll" value="音乐1.mp3"></div>
+            <div class="field"><label>中奖音乐（与 index.html 同目录）</label><input type="text" id="in-music-win" value="音乐2.mp3"></div>
+            <div class="field"><label>抽奖音量</label><input type="range" id="in-vol-roll" min="0" max="1" step="0.1" value="0.6"></div>
+            <div class="field"><label>中奖音量</label><input type="range" id="in-vol-win" min="0" max="1" step="0.1" value="0.8"></div>
+            <div class="field"><label>界面音效</label>
+                <select id="in-ui-sound"><option value="on">开启 ✨</option><option value="off">关闭</option></select>
+            </div>
+            <div class="field"><label>纸屑特效</label>
+                <select id="in-confetti"><option value="on">开启 🎉</option><option value="off">关闭</option></select>
+            </div>
+            <div class="field"><div class="hint">把 mp3 文件放在 index.html 同目录即可使用自定义音乐</div></div>
+        </div>
+        <div class="tab-panel" id="tab-names">
+            <div class="field"><label>每次开奖人数（1~10）</label><input type="number" id="in-count" value="1" min="1" max="10"></div>
+            <div class="field"><label>参与者名单（用逗号或换行分隔）</label>
+                <textarea id="in-names" rows="5">陈明,王强,李芳,张伟,赵敏,孙杰,周涛,吴磊,郑洁,冯平,褚卫,卫华,蒋云,沈霞,韩梅,杨立,朱勇,秦丽,尤文,许博</textarea>
+            </div>
+            <div class="field-row">
+                <button class="btn btn-green" id="btn-apply">✓ 应用名单</button>
+            </div>
+        </div>
+        <div class="tab-panel" id="tab-records">
+            <div class="stats-card">
+                <h3>🏅 中奖排行</h3>
+                <div id="stats-list"></div>
+            </div>
+            <div class="field"><label>中奖记录</label><div id="record-list"></div></div>
+            <div class="field-row">
+                <button class="btn btn-ghost" id="btn-undo">↩ 撤销上一轮</button>
+                <button class="btn btn-ghost" id="btn-export">📋 复制</button>
+                <button class="btn btn-red" id="btn-reset">⟳ 重置</button>
+            </div>
+        </div>
+        <div class="tab-panel" id="tab-storage">
+            <div class="field">
+                <label>自动保存</label>
+                <div class="hint">所有设置与抽奖记录都会自动保存在浏览器里，无需手动操作</div>
+            </div>
+            <div id="save-msg"></div>
+            <div class="field-row" style="margin-top:12px">
+                <button class="btn btn-red" id="btn-clear">🗑️ 清除全部数据</button>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<audio id="audio-roll" loop preload="auto" class="audio-el"></audio>
+<audio id="audio-win" preload="auto" class="audio-el"></audio>
 
 <script>
 (function () {
     "use strict";
 
-    /* ============ 主题配置 ============ */
+    /* ============ 主题配置（含每套主题独立文案） ============ */
     var THEMES = [
-        { id: 'chinese',   name: '🏮 中国风',   bg: 'assets/bg-chinese.png',   cls: 'theme-chinese' },
-        { id: 'tech',      name: '⚡ 科技感',   bg: 'assets/bg-tech.png',      cls: 'theme-tech' },
-        { id: 'luxury',    name: '👑 黑金奢华', bg: 'assets/bg-luxury.png',    cls: 'theme-luxury' },
-        { id: 'beauty',    name: '💄 美妆风',   bg: 'assets/bg-beauty.png',    cls: 'theme-beauty' },
-        { id: 'finance',   name: '💰 金融风',   bg: 'assets/bg-finance.png',   cls: 'theme-finance' },
-        { id: 'lifestyle', name: '🏡 生活风',   bg: 'assets/bg-lifestyle.png', cls: 'theme-lifestyle' }
+        { id: 'chinese',   name: '🏮 中国风', bg: 'assets/bg-chinese.png',   cls: 'theme-chinese',
+          copy: { sub: '福气临门 · 好运自来', btn: '抽 福 签', roll: '停一停' },
+          remain: '还有 {n} 位待揭晓', rounds: '已开 {n} 轮' },
+        { id: 'tech',      name: '⚡ 科技感', bg: 'assets/bg-tech.png',      cls: 'theme-tech',
+          copy: { sub: 'SYSTEM ONLINE · LUCK MODULE READY', btn: 'INITIATE', roll: 'ABORT' },
+          remain: 'REMAIN {n}', rounds: 'ROUND {n}' },
+        { id: 'luxury',    name: '👑 黑金奢华', bg: 'assets/bg-luxury.png',    cls: 'theme-luxury',
+          copy: { sub: '唯有至臻，方配得上好运', btn: 'REVEAL', roll: 'HOLD' },
+          remain: '剩余 {n} 位', rounds: '已开 {n} 轮' },
+        { id: 'beauty',    name: '💄 美妆风', bg: 'assets/bg-beauty.png',    cls: 'theme-beauty',
+          copy: { sub: '好运也要美美地来', btn: '我要中奖', roll: '等一等' },
+          remain: '还有 {n} 位小可爱', rounds: '已揭晓 {n} 轮' },
+        { id: 'finance',   name: '💰 金融风', bg: 'assets/bg-finance.png',   cls: 'theme-finance',
+          copy: { sub: '好运正在复利增长', btn: '立即开奖', roll: '挂单中' },
+          remain: '剩余 {n} 位', rounds: '已开 {n} 轮' },
+        { id: 'lifestyle', name: '🏡 生活风', bg: 'assets/bg-lifestyle.png', cls: 'theme-lifestyle',
+          copy: { sub: '把好运带回家', btn: '开始吧', roll: '就它啦' },
+          remain: '还剩 {n} 位', rounds: '已抽 {n} 轮' }
     ];
 
     var DEFAULTS = {
-        title: '🎊 年度盛典大抽奖',
+        title: '抽奖系统',
         subtitle: '愿此刻的好运，落向闪光的你',
         size: '56', icon: '🎁', count: '1',
         names: '陈明,王强,李芳,张伟,赵敏,孙杰,周涛,吴磊,郑洁,冯平,褚卫,卫华,蒋云,沈霞,韩梅,杨立,朱勇,秦丽,尤文,许博',
         musicRoll: '音乐1.mp3', musicWin: '音乐2.mp3',
-        volRoll: '0.6', volWin: '0.8', confetti: 'on'
+        volRoll: '0.6', volWin: '0.8', confetti: 'on', uiSound: 'on', muted: 'off'
     };
 
     function q(id) { return document.getElementById(id); }
+    function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
 
     /* ============ 状态 ============ */
     var curTheme = THEMES[0];
-    var pool = [], avail = [], winners = [];
-    var isRolling = false, timer = null, round = 1;
-    var audioOk = false;
+    var pool = [], avail = [], roundLog = [];   // roundLog: 每轮中奖名单 [{names:[], ts}]
+    var round = 1, isRolling = false, timer = null;
+    var audioOk = false, muted = false, uiSound = true;
+    var subCustomized = false, saveTimer = null, toastTimer = null;
+    var audioCtx = null;
+
+    /* ============ 主题引擎 ============ */
+    function applyTheme(t) {
+        curTheme = t;
+        document.body.className = t.cls;
+        q('bg').style.backgroundImage = 'url(' + t.bg + ')';
+        updateDecorations(t.id);
+        // 主题专属文案
+        if (!subCustomized) {
+            q('subtitle').textContent = t.copy.sub;
+            q('in-subtitle').value = t.copy.sub;
+        }
+        if (!isRolling) q('btn-text').textContent = t.copy.btn;
+        renderStatus();
+        // 主题卡片选中态
+        var cards = document.querySelectorAll('.theme-card');
+        for (var i = 0; i < cards.length; i++) cards[i].classList.toggle('active', cards[i].dataset.id === t.id);
+    }
+
+    function updateDecorations(themeId) {
+        var deco = q('theme-decorations');
+        deco.innerHTML = '';
+        var add = function (cls, text, left, top, delay) {
+            var d = document.createElement('div');
+            d.className = cls; d.textContent = text || '';
+            d.style.left = left; d.style.top = top;
+            if (delay) d.style.animationDelay = delay;
+            deco.appendChild(d);
+            return d;
+        };
+        if (themeId === 'chinese') {
+            add('deco-left', '🏮', '22px', '50%');
+            add('deco-right', '🏮', 'auto', '50%').style.right = '22px';
+            add('medallion', '🧧');
+        } else if (themeId === 'tech') {
+            add('hud-corner hud-tl', '', '18px', '18px');
+            add('hud-corner hud-tr', '', 'auto', '18px').style.right = '18px';
+            add('hud-corner hud-bl', '', '18px', 'auto').style.bottom = '18px';
+            add('hud-corner hud-br', '', 'auto', 'auto').style.right = '18px'; add('hud-corner hud-br', '', 'auto', 'auto').style.bottom = '18px';
+        } else if (themeId === 'luxury') {
+            add('gold-line gold-line-top');
+            add('gold-line gold-line-bottom');
+            add('g-corner g-tl'); add('g-corner g-tr'); add('g-corner g-bl'); add('g-corner g-br');
+        } else if (themeId === 'beauty') {
+            for (var i = 0; i < 5; i++) add('petal', '🌸', (8 + Math.random() * 80) + '%', (10 + Math.random() * 70) + '%', (Math.random() * 3) + 's');
+            for (var k = 0; k < 4; k++) add('sparkle', '✨', (10 + Math.random() * 80) + '%', (8 + Math.random() * 80) + '%', (Math.random() * 2) + 's');
+        } else if (themeId === 'finance') {
+            for (var v = 1; v < 6; v++) add('grid-line grid-v', '', (v * 16.66) + '%', '0');
+            for (var h = 1; h < 5; h++) add('grid-line grid-h', '', '0', (h * 20) + '%');
+        } else if (themeId === 'lifestyle') {
+            for (var l = 0; l < 5; l++) add('leaf', '🍃', (10 + Math.random() * 80) + '%', (10 + Math.random() * 80) + '%', (Math.random() * 2) + 's');
+        }
+    }
+
+    function initThemeGrid() {
+        var g = q('theme-grid');
+        g.innerHTML = '';
+        for (var i = 0; i < THEMES.length; i++) {
+            (function (t) {
+                var d = document.createElement('div');
+                d.className = 'theme-card';
+                d.dataset.id = t.id;
+                d.style.backgroundImage = 'url(' + t.bg + ')';
+                d.innerHTML = '<div class="t-copy">' + t.copy.sub + '</div><div class="t-check">✓</div><div class="t-name">' + t.name + '</div>';
+                d.addEventListener('click', function () { applyTheme(t); scheduleSave(); });
+                g.appendChild(d);
+            })(THEMES[i]);
+        }
+    }
+
+    /* ============ 状态显示 ============ */
+    function renderStatus() {
+        q('remain-chip').innerHTML = curTheme.remain.replace('{n}', '<b id="remain">' + avail.length + '</b>');
+        q('rounds-chip').innerHTML = curTheme.rounds.replace('{n}', '<b id="rounds">' + roundLog.length + '</b>');
+        updateRing();
+    }
+    function updateRing() {
+        var total = pool.length || 1;
+        var ratio = clamp(avail.length / total, 0, 1);
+        var c = 2 * Math.PI * 52;
+        q('ring-fg').style.strokeDashoffset = c * (1 - ratio);
+    }
+    function renderHistory() {
+        var h = q('history');
+        h.innerHTML = '';
+        if (!roundLog.length) {
+            h.innerHTML = '<div class="h-empty">还没有开奖记录，等你的第一次好运</div>';
+            return;
+        }
+        for (var i = roundLog.length - 1; i >= 0; i--) {
+            var d = document.createElement('div');
+            d.className = 'h-item';
+            d.innerHTML = '<b>第 ' + (i + 1) + ' 轮</b> · ' + roundLog[i].names.join('、');
+            h.appendChild(d);
+        }
+    }
+    function renderStats() {
+        var el = q('stats-list');
+        var counts = {};
+        roundLog.forEach(function (r) { r.names.forEach(function (n) { counts[n] = (counts[n] || 0) + 1; }); });
+        var arr = Object.keys(counts).map(function (n) { return { n: n, c: counts[n] }; }).sort(function (a, b) { return b.c - a.c; }).slice(0, 10);
+        if (!arr.length) { el.innerHTML = '<div class="stats-empty">还没有中奖记录</div>'; return; }
+        var medals = ['🥇', '🥈', '🥉'];
+        var max = arr[0].c;
+        el.innerHTML = arr.map(function (it, idx) {
+            var w = Math.round((it.c / max) * 100);
+            return '<div class="stats-row"><span class="medal">' + (medals[idx] || (idx + 1)) + '</span><span class="s-name">' + it.n + '</span><span class="s-bar"><i style="width:' + w + '%"></i></span><span class="s-num">' + it.c + '</span></div>';
+        }).join('');
+    }
+    function updateRecords() {
+        var el = q('record-list');
+        if (!roundLog.length) { el.innerHTML = '<div class="empty">还没有中奖记录，等你的第一次好运</div>'; return; }
+        var lines = [];
+        for (var i = 0; i < roundLog.length; i++) lines.push('🏆 第' + (i + 1) + '轮 · ' + roundLog[i].names.join('、'));
+        el.innerHTML = lines.reverse().join('<br>');
+        renderStats();
+    }
+
+    /* ============ 名单 / 槽位 ============ */
+    function initSlots() {
+        var n = parseInt(q('in-count').value) || 1;
+        var c = q('slots');
+        c.innerHTML = '';
+        for (var i = 0; i < n; i++) {
+            var s = document.createElement('div');
+            s.className = 'slot';
+            s.style.setProperty('--i', i);
+            s.textContent = '✨';
+            c.appendChild(s);
+        }
+        syncStepper();
+    }
+    function syncStepper() {
+        var n = parseInt(q('in-count').value) || 1;
+        q('count-val').textContent = n;
+    }
+    function initPool() {
+        pool = q('in-names').value.split(/[,，\n]/).map(function (n) { return n.trim(); }).filter(function (n) { return n !== ''; });
+        var used = {};
+        roundLog.forEach(function (r) { r.names.forEach(function (n) { used[n] = true; }); });
+        avail = pool.filter(function (n) { return !used[n]; });
+    }
+    function applyNames() {
+        initPool();
+        renderStatus(); initSlots(); updateRecords(); renderHistory();
+        q('toast').textContent = '名单已更新，共 ' + pool.length + ' 位参与者';
+        showToast();
+        closeDrawer();
+        scheduleSave();
+    }
+    function adjustCount(delta) {
+        var n = clamp((parseInt(q('in-count').value) || 1) + delta, 1, 10);
+        q('in-count').value = n;
+        initSlots();
+        scheduleSave();
+    }
+
+    /* ============ 抽奖 ============ */
+    function toggleDraw() {
+        var count = parseInt(q('in-count').value) || 1;
+        var btn = q('draw-btn'), btnText = q('btn-text');
+        initAudio();
+
+        if (!isRolling) {
+            if (avail.length < count) { toast('可抽人数不足，先在「名单」里添加参与者吧'); return; }
+            isRolling = true;
+            btnText.textContent = curTheme.copy.roll;
+            btn.classList.add('rolling');
+            playRollMusic();
+            var slots = document.querySelectorAll('.slot');
+            timer = setInterval(function () {
+                for (var i = 0; i < slots.length; i++) {
+                    slots[i].textContent = avail[Math.floor(Math.random() * avail.length)];
+                    slots[i].className = 'slot rolling';
+                }
+            }, 80);
+        } else {
+            isRolling = false;
+            btnText.textContent = curTheme.copy.btn;
+            btn.classList.remove('rolling');
+            clearInterval(timer);
+            stopRollMusic();
+
+            initSlots();
+            var slotsEl = document.querySelectorAll('.slot');
+            var names = [];
+            for (var k = 0; k < count; k++) {
+                var idx = Math.floor(Math.random() * avail.length);
+                var pick = avail.splice(idx, 1)[0];
+                names.push(pick);
+                slotsEl[k].textContent = pick;
+                slotsEl[k].className = 'slot winner';
+            }
+            roundLog.push({ names: names, ts: Date.now() });
+            renderStatus(); renderHistory(); updateRecords();
+            playWinMusic();
+            celebrate(names);
+            q('lottery-box').classList.add('winner');
+            setTimeout(function () { q('lottery-box').classList.remove('winner'); }, 3200);
+            scheduleSave();
+        }
+    }
+
+    /* 开奖庆祝 */
+    function celebrate(names) {
+        q('celebrate-names').textContent = names.join('　');
+        q('celebrate').classList.add('show');
+        confetti(true);
+        clearTimeout(celebrate.timer);
+        celebrate.timer = setTimeout(hideCelebrate, 2800);
+    }
+    function hideCelebrate() { q('celebrate').classList.remove('show'); }
+    q('celebrate').addEventListener('click', hideCelebrate);
+
+    /* 纸屑（增强） */
+    function confetti(big) {
+        if (q('in-confetti').value === 'off') return;
+        var colors = ['#ffd700', '#ff6b6b', '#48dbfb', '#ff9ff3', '#54a0ff', '#ff4757', '#2ed573', '#ff6348', '#ffa502'];
+        var n = big ? 110 : 60;
+        for (var i = 0; i < n; i++) {
+            var p = document.createElement('div');
+            var c = colors[Math.floor(Math.random() * colors.length)];
+            var s = Math.random() * 8 + 4;
+            p.className = 'confetti';
+            p.style.cssText = 'left:' + Math.random() * 100 + '%;top:-12px;width:' + s + 'px;height:' + s * (Math.random() * 0.5 + 0.5) + 'px;background:' + c + ';border-radius:' + (Math.random() > 0.5 ? '50%' : '2px') + ';--dur:' + (Math.random() * 2 + 2) + 's;animation-delay:' + Math.random() * 1.5 + 's;';
+            document.body.appendChild(p);
+            setTimeout(function () { p.remove(); }, 5200);
+        }
+        if (big) {
+            for (var j = 0; j < 12; j++) {
+                var st = document.createElement('div');
+                st.className = 'streamer';
+                st.style.cssText = 'left:' + Math.random() * 100 + '%;top:-14vh;width:' + (Math.random() * 6 + 3) + 'px;height:' + (Math.random() * 30 + 20) + 'px;background:' + colors[Math.floor(Math.random() * colors.length)] + ';border-radius:2px;--dur:' + (Math.random() * 1.6 + 2.2) + 's;';
+                document.body.appendChild(st);
+                setTimeout(function () { st.remove(); }, 5200);
+            }
+            ['🎉', '🍀', '✨', '⭐'].forEach(function (e) {
+                for (var m = 0; m < 4; m++) {
+                    var em = document.createElement('div');
+                    em.className = 'emoji-rain';
+                    em.textContent = e;
+                    em.style.cssText = 'left:' + Math.random() * 100 + '%;top:-12vh;font-size:' + (Math.random() * 14 + 16) + 'px;--dur:' + (Math.random() * 1.6 + 2.2) + 's;';
+                    document.body.appendChild(em);
+                    setTimeout(function () { em.remove(); }, 5200);
+                }
+            });
+        }
+    }
+
+    /* ============ 撤销 / 重置 / 导出 ============ */
+    function undoLast() {
+        if (!roundLog.length) { toast('没有可撤销的开奖'); return; }
+        var last = roundLog.pop();
+        last.names.forEach(function (n) { avail.push(n); });
+        renderStatus(); renderHistory(); updateRecords();
+        q('lottery-box').classList.remove('winner');
+        toast('已撤销上一轮：' + last.names.join('、'));
+        scheduleSave();
+    }
+    function exportWinners() {
+        if (!roundLog.length) { toast('还没有中奖记录哦'); return; }
+        var text = roundLog.map(function (r, i) { return '第' + (i + 1) + '轮：' + r.names.join('、'); }).join('\n');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () { toast('中奖名单已复制'); });
+        } else {
+            var ta = document.createElement('textarea');
+            ta.value = text; document.body.appendChild(ta);
+            ta.select(); document.execCommand('copy'); ta.remove();
+            toast('中奖名单已复制');
+        }
+    }
+    function resetAll() {
+        if (!confirm('确定要重置所有开奖记录吗？名单会恢复为可抽状态')) return;
+        roundLog = []; round = 1;
+        var used = {};
+        pool.forEach(function (n) { used[n] = false; });
+        avail = pool.slice();
+        renderStatus(); renderHistory(); updateRecords();
+        q('lottery-box').classList.remove('winner');
+        scheduleSave();
+        toast('已重置所有记录');
+    }
+
+    /* ============ 音效（音乐 + 界面点击音） ============ */
+    function toast(msg) {
+        var t = q('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2200);
+    }
+    function initAudio() {
+        if (audioOk) return;
+        audioOk = true;
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+        toast('♪ 音效已开启，好运要开始啦');
+    }
+    function clickSound() {
+        if (!uiSound || !audioCtx) return;
+        try {
+            var o = audioCtx.createOscillator();
+            var g = audioCtx.createGain();
+            o.type = 'sine'; o.frequency.value = 780;
+            g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.07);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(); o.stop(audioCtx.currentTime + 0.08);
+        } catch (e) {}
+    }
+    function playRollMusic() {
+        if (muted) return;
+        var src = q('in-music-roll').value;
+        var vol = parseFloat(q('in-vol-roll').value);
+        if (vol <= 0 || !src) return;
+        var a = q('audio-roll');
+        a.src = src; a.volume = vol;
+        a.play().catch(function () {});
+    }
+    function stopRollMusic() {
+        var a = q('audio-roll');
+        a.pause(); a.currentTime = 0;
+    }
+    function playWinMusic() {
+        if (muted) return;
+        var src = q('in-music-win').value;
+        var vol = parseFloat(q('in-vol-win').value);
+        if (vol <= 0 || !src) return;
+        var a = q('audio-win');
+        a.src = src; a.volume = vol;
+        a.play().catch(function () {});
+        setTimeout(function () {
+            var v = a.volume;
+            var fade = setInterval(function () {
+                if (v > 0.05) { v -= 0.05; a.volume = v; }
+                else { a.pause(); a.volume = vol; clearInterval(fade); }
+            }, 100);
+        }, 3000);
+    }
+    function toggleMute() {
+        muted = !muted;
+        q('mute-btn').textContent = muted ? '🔇' : '🔊';
+        q('mute-btn').classList.toggle('active', muted);
+        if (muted) { stopRollMusic(); q('audio-win').pause(); }
+        toast(muted ? '已静音' : '声音已开启');
+        scheduleSave();
+    }
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function () {});
+        else document.exitFullscreen();
+    }
+
+    /* ============ 设置抽屉 ============ */
+    function openDrawer() { q('drawer').classList.add('open'); q('drawer-overlay').classList.add('show'); updateRecords(); document.body.classList.add('locked'); }
+    function closeDrawer() { q('drawer').classList.remove('open'); q('drawer-overlay').classList.remove('show'); document.body.classList.remove('locked'); }
+    function liveUpdate() {
+        q('title').textContent = q('in-title').value;
+        q('subtitle').textContent = q('in-subtitle').value;
+        q('title').style.fontSize = q('in-size').value + 'px';
+        q('btn-spin').textContent = q('in-icon').value;
+        if (q('in-subtitle').value !== curTheme.copy.sub) subCustomized = true;
+        scheduleSave();
+    }
+
+    /* ============ 存储（自动保存） ============ */
+    function scheduleSave() {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(saveSettings, 400);
+    }
+    function saveSettings() {
+        try {
+            var data = {
+                theme: curTheme.id,
+                s: {
+                    title: q('in-title').value, subtitle: q('in-subtitle').value, size: q('in-size').value,
+                    icon: q('in-icon').value, count: q('in-count').value, names: q('in-names').value,
+                    musicRoll: q('in-music-roll').value, musicWin: q('in-music-win').value,
+                    volRoll: q('in-vol-roll').value, volWin: q('in-vol-win').value,
+                    confetti: q('in-confetti').value, uiSound: q('in-ui-sound').value,
+                    muted: muted ? 'on' : 'off'
+                },
+                state: { pool: pool, avail: avail, roundLog: roundLog, round: round }
+            };
+            localStorage.setItem('luckyMoment', JSON.stringify(data));
+            q('save-msg').textContent = '✓ 已自动保存 ' + new Date().toLocaleTimeString();
+        } catch (e) {
+            q('save-msg').textContent = '自动保存失败';
+        }
+    }
+    function loadSettings() {
+        try {
+            var raw = localStorage.getItem('luckyMoment');
+            if (!raw) return false;
+            var data = JSON.parse(raw);
+            if (data.theme) {
+                var t = null;
+                for (var i = 0; i < THEMES.length; i++) if (THEMES[i].id === data.theme) { t = THEMES[i]; break; }
+                if (t) applyTheme(t);
+            }
+            var s = data.s || {};
+            q('in-title').value = s.title || DEFAULTS.title;
+            q('in-subtitle').value = s.subtitle || DEFAULTS.subtitle;
+            q('in-size').value = s.size || DEFAULTS.size;
+            q('in-icon').value = s.icon || DEFAULTS.icon;
+            q('in-count').value = s.count || DEFAULTS.count;
+            q('in-names').value = s.names || DEFAULTS.names;
+            q('in-music-roll').value = s.musicRoll || DEFAULTS.musicRoll;
+            q('in-music-win').value = s.musicWin || DEFAULTS.musicWin;
+            q('in-vol-roll').value = s.volRoll || DEFAULTS.volRoll;
+            q('in-vol-win').value = s.volWin || DEFAULTS.volWin;
+            q('in-confetti').value = s.confetti || DEFAULTS.confetti;
+            q('in-ui-sound').value = s.uiSound || DEFAULTS.uiSound;
+            muted = (s.muted || DEFAULTS.muted) === 'on';
+            q('mute-btn').textContent = muted ? '🔇' : '🔊';
+            q('mute-btn').classList.toggle('active', muted);
+            uiSound = q('in-ui-sound').value !== 'off';
+
+            if (data.state) {
+                pool = data.state.pool || [];
+                if (data.state.roundLog) roundLog = data.state.roundLog;
+                else if (data.state.winners) roundLog = data.state.winners.map(function (w) { return { names: [w] }; });
+                avail = data.state.avail || pool.slice();
+                round = data.state.round || 1;
+            }
+            if (q('in-subtitle').value !== curTheme.copy.sub) subCustomized = true;
+            liveUpdate(); initSlots();
+            renderStatus(); renderHistory(); updateRecords();
+            q('save-msg').textContent = '✓ 已恢复上次的设置';
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+    function clearSettings() {
+        if (!confirm('确定要清除所有已保存的数据吗？')) return;
+        localStorage.removeItem('luckyMoment');
+        location.reload();
+    }
 
     /* ============ 粒子背景 ============ */
     var cv = q('particles'), cx = cv.getContext('2d');
     var pts = [], mx = 0, my = 0;
-
     function resizeCanvas() { cv.width = innerWidth; cv.height = innerHeight; }
     addEventListener('resize', resizeCanvas);
     addEventListener('mousemove', function (e) { mx = e.clientX; my = e.clientY; });
@@ -621,7 +1417,6 @@
         cx.fillStyle = 'rgba(255,255,255,' + this.o + ')';
         cx.fill();
     };
-
     function initParticles() {
         resizeCanvas();
         pts = [];
@@ -634,330 +1429,9 @@
         requestAnimationFrame(particleLoop);
     }
 
-    /* ============ 主题切换 ============ */
-    function applyTheme(t) {
-        curTheme = t;
-        document.body.className = t.cls;
-        q('bg').style.backgroundImage = 'url(' + t.bg + ')';
-        updateDecorations(t.id);
-        var cards = document.querySelectorAll('.theme-card');
-        for (var i = 0; i < cards.length; i++) cards[i].classList.toggle('active', cards[i].dataset.id === t.id);
-    }
-
-    function updateDecorations(themeId) {
-        var deco = q('theme-decorations');
-        deco.innerHTML = '';
-        if (themeId === 'chinese') {
-            deco.innerHTML = '<div class="deco-left">🏮</div><div class="deco-right">🏮</div>';
-        } else if (themeId === 'tech') {
-            deco.innerHTML = '<div class="hud-corner hud-tl"></div><div class="hud-corner hud-tr"></div><div class="hud-corner hud-bl"></div><div class="hud-corner hud-br"></div>';
-        } else if (themeId === 'luxury') {
-            deco.innerHTML = '<div class="gold-line gold-line-top"></div><div class="gold-line gold-line-bottom"></div>';
-        } else if (themeId === 'beauty') {
-            for (var i = 0; i < 6; i++) {
-                var p = document.createElement('div');
-                p.className = 'petal'; p.textContent = '🌸';
-                p.style.left = (10 + Math.random() * 80) + '%';
-                p.style.top = (10 + Math.random() * 80) + '%';
-                p.style.animationDelay = (Math.random() * 3) + 's';
-                deco.appendChild(p);
-            }
-        } else if (themeId === 'finance') {
-            for (var v = 1; v < 6; v++) {
-                var elV = document.createElement('div');
-                elV.className = 'grid-line grid-v';
-                elV.style.left = (v * 16.66) + '%';
-                deco.appendChild(elV);
-            }
-            for (var h = 1; h < 5; h++) {
-                var elH = document.createElement('div');
-                elH.className = 'grid-line grid-h';
-                elH.style.top = (h * 20) + '%';
-                deco.appendChild(elH);
-            }
-        } else if (themeId === 'lifestyle') {
-            for (var l = 0; l < 5; l++) {
-                var leaf = document.createElement('div');
-                leaf.className = 'leaf'; leaf.textContent = '🍃';
-                leaf.style.left = (10 + Math.random() * 80) + '%';
-                leaf.style.top = (10 + Math.random() * 80) + '%';
-                leaf.style.animationDelay = (Math.random() * 2) + 's';
-                deco.appendChild(leaf);
-            }
-        }
-    }
-
-    function initThemeGrid() {
-        var g = q('theme-grid');
-        g.innerHTML = '';
-        for (var i = 0; i < THEMES.length; i++) {
-            (function (t) {
-                var d = document.createElement('div');
-                d.className = 'theme-card';
-                d.dataset.id = t.id;
-                d.style.backgroundImage = 'url(' + t.bg + ')';
-                d.innerHTML = '<div class="t-name">' + t.name + '</div>';
-                d.addEventListener('click', function () { applyTheme(t); });
-                g.appendChild(d);
-            })(THEMES[i]);
-        }
-    }
-
-    /* ============ 音效 ============ */
-    function initAudio() {
-        if (audioOk) return;
-        audioOk = true;
-        var t = q('audio-toast');
-        t.textContent = '♪ 音效已开启，好运要开始啦';
-        t.classList.add('show');
-        setTimeout(function () { t.classList.remove('show'); }, 2400);
-    }
-
-    function playRollMusic() {
-        var src = q('in-music-roll').value;
-        var vol = parseFloat(q('in-vol-roll').value);
-        if (vol <= 0 || !src) return;
-        var a = q('audio-roll');
-        a.src = src; a.volume = vol;
-        a.play().catch(function () {});
-    }
-
-    function stopRollMusic() {
-        var a = q('audio-roll');
-        a.pause(); a.currentTime = 0;
-    }
-
-    function playWinMusic() {
-        var src = q('in-music-win').value;
-        var vol = parseFloat(q('in-vol-win').value);
-        if (vol <= 0 || !src) return;
-        var a = q('audio-win');
-        a.src = src; a.volume = vol;
-        a.play().catch(function () {});
-        setTimeout(function () {
-            var v = a.volume;
-            var fade = setInterval(function () {
-                if (v > 0.05) { v -= 0.05; a.volume = v; }
-                else { a.pause(); a.volume = vol; clearInterval(fade); }
-            }, 100);
-        }, 3000);
-    }
-
-    /* ============ 纸屑 ============ */
-    function confetti() {
-        if (q('in-confetti').value === 'off') return;
-        var colors = ['#ffd700', '#ff6b6b', '#48dbfb', '#ff9ff3', '#54a0ff', '#ff4757', '#2ed573', '#ff6348', '#ffa502'];
-        for (var i = 0; i < 80; i++) {
-            var p = document.createElement('div');
-            p.className = 'confetti';
-            var c = colors[Math.floor(Math.random() * colors.length)];
-            var s = Math.random() * 8 + 4;
-            p.style.cssText = 'left:' + Math.random() * 100 + '%;top:-10px;width:' + s + 'px;height:' + s * (Math.random() * 0.5 + 0.5) + 'px;background:' + c + ';border-radius:' + (Math.random() > 0.5 ? '50%' : '2px') + ';--dur:' + (Math.random() * 2 + 2) + 's;animation-delay:' + Math.random() * 1.5 + 's;';
-            document.body.appendChild(p);
-            setTimeout(function () { p.remove(); }, 5000);
-        }
-    }
-
-    /* ============ 设置面板 ============ */
-    function openSettings() { q('settings-overlay').classList.add('open'); updateRecords(); }
-    function closeSettings() { q('settings-overlay').classList.remove('open'); }
-
-    function liveUpdate() {
-        q('title').textContent = q('in-title').value;
-        q('subtitle').textContent = q('in-subtitle').value;
-        q('title').style.fontSize = q('in-size').value + 'px';
-        q('btn-icon').textContent = q('in-icon').value;
-    }
-
-    /* ============ 名单 ============ */
-    function initSlots() {
-        var n = parseInt(q('in-count').value) || 1;
-        var c = q('slots');
-        c.innerHTML = '';
-        for (var i = 0; i < n; i++) {
-            var s = document.createElement('div');
-            s.className = 'slot';
-            s.textContent = '✨';
-            c.appendChild(s);
-        }
-    }
-
-    function applyNames() {
-        var text = q('in-names').value;
-        pool = text.split(/[,，\n]/).map(function (n) { return n.trim(); }).filter(function (n) { return n !== ''; });
-        avail = pool.filter(function (n) { return winners.indexOf(n) === -1; });
-        q('remain').textContent = avail.length;
-        initSlots(); updateRecords();
-        closeSettings();
-    }
-
-    /* ============ 记录 ============ */
-    function updateRecords() {
-        var el = q('record-list');
-        if (!winners.length) {
-            el.innerHTML = '<div class="empty">还没有中奖记录，等你的第一次好运</div>';
-            return;
-        }
-        el.innerHTML = winners.map(function (w, i) {
-            return '<div>🏆 第' + (i + 1) + '轮 · ' + w + '</div>';
-        }).join('');
-    }
-
-    function exportWinners() {
-        if (!winners.length) { alert('还没有中奖记录哦'); return; }
-        var text = winners.map(function (w, i) { return '第' + (i + 1) + '轮：' + w; }).join('\n');
-        navigator.clipboard.writeText(text).then(function () {
-            alert('中奖名单已复制到剪贴板');
-        }).catch(function () {
-            var ta = document.createElement('textarea');
-            ta.value = text; document.body.appendChild(ta);
-            ta.select(); document.execCommand('copy'); ta.remove();
-            alert('中奖名单已复制到剪贴板');
-        });
-    }
-
-    function resetAll() {
-        if (!confirm('确定要重置所有记录吗？开奖历史将被清空')) return;
-        winners = []; round = 1; avail = pool.slice();
-        q('history').innerHTML = '';
-        q('remain').textContent = avail.length;
-        q('rounds').textContent = '0';
-        q('lottery-box').classList.remove('winner');
-        initSlots(); updateRecords();
-    }
-
-    /* ============ 存储 ============ */
-    function saveSettings() {
-        try {
-            var data = {
-                theme: curTheme.id,
-                s: {
-                    title: q('in-title').value, subtitle: q('in-subtitle').value, size: q('in-size').value,
-                    icon: q('in-icon').value, count: q('in-count').value, names: q('in-names').value,
-                    musicRoll: q('in-music-roll').value, musicWin: q('in-music-win').value,
-                    volRoll: q('in-vol-roll').value, volWin: q('in-vol-win').value, confetti: q('in-confetti').value
-                },
-                state: { pool: pool, avail: avail, winners: winners, round: round }
-            };
-            localStorage.setItem('luckyMoment', JSON.stringify(data));
-            q('save-msg').textContent = '已保存 ' + new Date().toLocaleTimeString();
-        } catch (e) {
-            q('save-msg').textContent = '保存失败，请重试';
-        }
-    }
-
-    function loadSettings() {
-        try {
-            var raw = localStorage.getItem('luckyMoment');
-            if (!raw) return false;
-            var data = JSON.parse(raw);
-            if (data.theme) {
-                var t = null;
-                for (var i = 0; i < THEMES.length; i++) if (THEMES[i].id === data.theme) { t = THEMES[i]; break; }
-                if (t) applyTheme(t);
-            }
-            var s = data.s || {};
-            q('in-title').value = s.title || DEFAULTS.title;
-            q('in-subtitle').value = s.subtitle || DEFAULTS.subtitle;
-            q('in-size').value = s.size || DEFAULTS.size;
-            q('in-icon').value = s.icon || DEFAULTS.icon;
-            q('in-count').value = s.count || DEFAULTS.count;
-            q('in-names').value = s.names || DEFAULTS.names;
-            q('in-music-roll').value = s.musicRoll || DEFAULTS.musicRoll;
-            q('in-music-win').value = s.musicWin || DEFAULTS.musicWin;
-            q('in-vol-roll').value = s.volRoll || DEFAULTS.volRoll;
-            q('in-vol-win').value = s.volWin || DEFAULTS.volWin;
-            q('in-confetti').value = s.confetti || DEFAULTS.confetti;
-            if (data.state) {
-                pool = data.state.pool || [];
-                avail = data.state.avail || pool.slice();
-                winners = data.state.winners || [];
-                round = data.state.round || 1;
-            }
-            liveUpdate(); initSlots();
-            var h = q('history');
-            h.innerHTML = '';
-            for (var j = 0; j < winners.length; j++) {
-                var d = document.createElement('div');
-                d.className = 'h-item';
-                d.innerHTML = '<b>🏆 第' + (j + 1) + '轮</b> · ' + winners[j];
-                h.prepend(d);
-            }
-            q('remain').textContent = avail.length;
-            q('rounds').textContent = winners.length;
-            q('save-msg').textContent = '已恢复之前的设置';
-            return true;
-        } catch (e) {
-            return false;
-        }
-    }
-
-    function clearSettings() {
-        if (!confirm('确定要清除已保存的设置吗？')) return;
-        localStorage.removeItem('luckyMoment');
-        q('save-msg').textContent = '已清除，回到初始状态';
-        applyTheme(THEMES[0]); applyNames(); liveUpdate(); initSlots();
-    }
-
-    /* ============ 抽奖 ============ */
-    function toggleDraw() {
-        var count = parseInt(q('in-count').value) || 1;
-        var btn = q('draw-btn'), btnText = q('btn-text'), box = q('lottery-box');
-        initAudio();
-
-        if (!isRolling) {
-            if (avail.length < count) { alert('可抽人数不足，先在「名单」里添加参与者吧'); return; }
-            isRolling = true;
-            btnText.textContent = '停一下';
-            btn.classList.add('rolling');
-            playRollMusic();
-            var slots = document.querySelectorAll('.slot');
-            timer = setInterval(function () {
-                for (var i = 0; i < slots.length; i++) {
-                    slots[i].textContent = avail[Math.floor(Math.random() * avail.length)];
-                    slots[i].className = 'slot rolling';
-                }
-            }, 80);
-        } else {
-            isRolling = false;
-            btnText.textContent = '开始抽奖';
-            btn.classList.remove('rolling');
-            clearInterval(timer);
-            stopRollMusic();
-            box.classList.add('winner');
-
-            var slotsEl = document.querySelectorAll('.slot');
-            var roundWinners = [];
-            for (var k = 0; k < count; k++) {
-                var idx = Math.floor(Math.random() * avail.length);
-                var pick = avail.splice(idx, 1)[0];
-                roundWinners.push(pick); winners.push(pick);
-                slotsEl[k].textContent = pick;
-                slotsEl[k].className = 'slot winner';
-            }
-
-            var item = document.createElement('div');
-            item.className = 'h-item';
-            item.innerHTML = '<b>🏆 第' + round + '轮</b> · ' + roundWinners.join('、');
-            q('history').prepend(item);
-
-            round++;
-            q('remain').textContent = avail.length;
-            q('rounds').textContent = winners.length;
-            playWinMusic();
-            confetti();
-            setTimeout(function () { box.classList.remove('winner'); }, 3000);
-        }
-    }
-
-    function toggleFullscreen() {
-        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function () {});
-        else document.exitFullscreen();
-    }
-
     /* ============ 事件绑定 ============ */
     function bindTabs() {
-        q('settings-tabs').addEventListener('click', function (e) {
+        q('drawer-tabs').addEventListener('click', function (e) {
             var btn = e.target.closest('.tab-btn');
             if (!btn) return;
             var tabs = document.querySelectorAll('.tab-btn');
@@ -966,26 +1440,60 @@
             for (var j = 0; j < panels.length; j++) panels[j].classList.remove('active');
             btn.classList.add('active');
             q('tab-' + btn.dataset.tab).classList.add('active');
+            clickSound();
         });
     }
-
-    function bindEvents() {
-        q('draw-btn').addEventListener('click', toggleDraw);
-        q('settings-btn').addEventListener('click', openSettings);
-        q('settings-close').addEventListener('click', closeSettings);
-        q('settings-overlay').addEventListener('click', function (e) {
-            if (e.target === q('settings-overlay')) closeSettings();
+    function bindDrawerSwipe() {
+        // 移动端下拉关闭抽屉（仅在抽屉打开且内容滚到顶时生效）
+        var drawer = q('drawer'), body = q('drawer-body');
+        var startY = null, dragging = false;
+        drawer.addEventListener('touchstart', function (e) {
+            if (!drawer.classList.contains('open') || e.touches.length !== 1 || body.scrollTop > 0) return;
+            startY = e.touches[0].clientY;
+        }, { passive: true });
+        drawer.addEventListener('touchmove', function (e) {
+            if (startY === null) return;
+            var dy = e.touches[0].clientY - startY;
+            if (dy <= 0) return;
+            if (!dragging) { dragging = true; drawer.style.transition = 'none'; }
+            drawer.style.transform = 'translateY(' + dy * 0.55 + 'px)';
+        }, { passive: true });
+        drawer.addEventListener('touchend', function () {
+            if (startY === null) return;
+            var dy = parseFloat(drawer.style.transform.replace(/[^0-9\-.]/g, '')) || 0;
+            drawer.style.transition = ''; drawer.style.transform = '';
+            startY = null; dragging = false;
+            if (dy > 90) closeDrawer();
         });
-        q('btn-apply').addEventListener('click', applyNames);
-        q('btn-export').addEventListener('click', exportWinners);
-        q('btn-reset').addEventListener('click', resetAll);
-        q('btn-save').addEventListener('click', saveSettings);
-        q('btn-clear').addEventListener('click', clearSettings);
+    }
+    function bindEvents() {
+        q('draw-btn').addEventListener('click', function () { clickSound(); toggleDraw(); });
+        q('settings-btn').addEventListener('click', function () { clickSound(); openDrawer(); });
+        q('drawer-close').addEventListener('click', function () { clickSound(); closeDrawer(); });
+        q('drawer-overlay').addEventListener('click', closeDrawer);
+        q('count-minus').addEventListener('click', function () { clickSound(); adjustCount(-1); });
+        q('count-plus').addEventListener('click', function () { clickSound(); adjustCount(1); });
+        q('mute-btn').addEventListener('click', function () { clickSound(); toggleMute(); });
+        q('fullscreen-btn').addEventListener('click', function () { clickSound(); toggleFullscreen(); });
+        bindDrawerSwipe();
+
+        q('btn-apply').addEventListener('click', function () { clickSound(); applyNames(); });
+        q('btn-undo').addEventListener('click', function () { clickSound(); undoLast(); });
+        q('btn-export').addEventListener('click', function () { clickSound(); exportWinners(); });
+        q('btn-reset').addEventListener('click', function () { clickSound(); resetAll(); });
+        q('btn-clear').addEventListener('click', function () { clickSound(); clearSettings(); });
 
         ['in-title', 'in-subtitle', 'in-size', 'in-icon'].forEach(function (id) {
             q(id).addEventListener('input', liveUpdate);
         });
+        ['in-music-roll', 'in-music-win', 'in-vol-roll', 'in-vol-win', 'in-confetti', 'in-ui-sound'].forEach(function (id) {
+            q(id).addEventListener('input', scheduleSave);
+        });
         q('in-count').addEventListener('input', initSlots);
+        q('in-ui-sound').addEventListener('change', function () {
+            uiSound = q('in-ui-sound').value !== 'off';
+            scheduleSave();
+        });
         bindTabs();
 
         document.addEventListener('click', function () { initAudio(); }, { once: true });
@@ -995,7 +1503,8 @@
             if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
             if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); toggleDraw(); }
             if (e.code === 'KeyF') toggleFullscreen();
-            if (e.code === 'Escape') closeSettings();
+            if (e.code === 'KeyM') toggleMute();
+            if (e.code === 'Escape') { if (q('drawer').classList.contains('open')) closeDrawer(); else hideCelebrate(); }
         });
     }
 
@@ -1005,7 +1514,17 @@
         initThemeGrid();
         applyTheme(THEMES[0]);
         var restored = loadSettings();
-        if (!restored) { applyNames(); liveUpdate(); initSlots(); }
+        if (!restored) {
+            applyTheme(THEMES[0]);
+            q('subtitle').textContent = curTheme.copy.sub;
+            q('in-subtitle').value = curTheme.copy.sub;
+            q('btn-text').textContent = curTheme.copy.btn;
+            initPool();
+            initSlots(); renderStatus(); renderHistory(); updateRecords();
+        } else if (!pool.length) {
+            initPool();
+            renderStatus(); renderHistory(); updateRecords();
+        }
     }
 
     initParticles();
